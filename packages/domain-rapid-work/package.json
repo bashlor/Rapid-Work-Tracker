@@ -1,0 +1,56 @@
+{
+  "name": "domain-rapid-work",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Domain layer for Rapid Work time tracking application",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup ./index.ts",
+    "clean": "rm -rf dist",
+    "bundle": "tsup ./index.ts --dts --minify",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts",
+    "test": "tsx bin/test.ts",
+    "test:watch": "tsx bin/test.ts --watch"
+  },
+  "keywords": [
+    "time-tracking",
+    "domain"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "luxon": "^3.7.1",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.34.0",
+    "@japa/assert": "^4.1.1",
+    "@japa/expect-type": "^2.0.3",
+    "@japa/runner": "^4.4.0",
+    "@types/luxon": "^3.7.1",
+    "@types/node": "^22.17.2",
+    "@types/uuid": "^9.0.8",
+    "eslint": "^9.26.0",
+    "eslint-plugin-perfectionist": "^4.15.0",
+    "globals": "^16.3.0",
+    "jiti": "^2.5.1",
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.4",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.42.0"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-musl": "^4.48.0"
+  }
+}

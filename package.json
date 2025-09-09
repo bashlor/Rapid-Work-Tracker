@@ -1,0 +1,36 @@
+{
+  "name": "rapid-work-tracker",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "lint:fix": "turbo lint --fix",
+    "test:all": "pnpm exec just test:all",
+    "test:package": "pnpm exec just test:package",
+    "test:type": "pnpm exec just test:type",
+    "test:suite": "pnpm exec just test:suite",
+    "test:list": "pnpm exec just test:list",
+    "test:domain": "pnpm exec just test:package --package domain",
+    "test:web": "pnpm exec just test:package --package web",
+    "test:web:unit": "pnpm exec just test:suite --package web --type unit",
+    "test:web:integration": "pnpm exec just test:suite --package web --type integration",
+    "test:unit": "pnpm exec just test:type --type unit",
+    "test:integration": "pnpm exec just test:type --type integration"
+  },
+  "devDependencies": {
+    "execa": "^9.6.0",
+    "just-task": "^1.12.0",
+    "minimist": "^1.2.8",
+    "p-limit": "^7.1.1",
+    "turbo": "^2.5.6",
+    "typescript": "^5.9.2"
+  },
+  "packageManager": "pnpm@10.15.1",
+  "engines": {
+    "node": ">=24"
+  },
+  "volta": {
+    "node": "24.6.0"
+  }
+}

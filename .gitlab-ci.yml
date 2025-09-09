@@ -1,0 +1,59 @@
+stages:
+  - version
+  - build
+  - deploy
+
+variables:
+  IMAGE_NAME: $CI_REGISTRY/$CI_PROJECT_PATH
+  GIT_DEPTH: 0  # Full git history for changelog generation
+
+# Job pour analyser les commits et déterminer la version
+analyze_version:
+  stage: version
+  image: node:18-alpine
+  before_script:
+    - apk add --no-cache git bash
+    - git config --global user.email "ci@gitlab.com"
+    - git config --global user.name "GitLab CI"
+  script:
+    - ./scripts/generate-version.sh
+  artifacts:
+    reports:
+      dotenv: version.env
+    paths:
+      - CHANGELOG.md
+    expire_in: 1 hour
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"
+      changes:
+        - "**/*"
+      when: manual
+  allow_failure: false
+
+build_docker_image:
+  stage: build
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  needs:
+    - job: analyze_version
+      artifacts: true
+  script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+    
+    # Utiliser le tag généré par le job de versioning
+    - |
+      if [ -n "$NEW_TAG" ]; then
+        echo "Construction avec le tag: $NEW_TAG"
+        docker build -t $IMAGE_NAME:$NEW_TAG .
+        docker tag $IMAGE_NAME:$NEW_TAG $IMAGE_NAME:latest
+        docker push $IMAGE_NAME:$NEW_TAG
+        docker push $IMAGE_NAME:latest
+      else
+        echo "Construction avec le SHA du commit"
+        docker build -t $IMAGE_NAME:$CI_COMMIT_SHA .
+        docker push $IMAGE_NAME:$CI_COMMIT_SHA
+      fi
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_TAG

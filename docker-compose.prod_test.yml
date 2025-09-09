@@ -1,0 +1,52 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    environment:
+      TZ: Europe/Paris
+      PORT: 3333
+      HOST: 0.0.0.0
+      LOG_LEVEL: info
+      APP_KEY: your-32-character-secret-key-here
+      NODE_ENV: production
+      SESSION_DRIVER: memory
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: rapidwork
+      DB_PASSWORD: rapidwork_password
+      DB_DATABASE: rapidwork_test
+    ports:
+      - '3333:3333'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - rapidwork-test
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: rapidwork
+      POSTGRES_PASSWORD: rapidwork_password
+      POSTGRES_DB: rapidwork_test
+    ports:
+      - '5433:5432'
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rapidwork -d rapidwork_test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - rapidwork-test
+
+volumes:
+  postgres_test_data:
+
+networks:
+  rapidwork-test:
+    driver: bridge
