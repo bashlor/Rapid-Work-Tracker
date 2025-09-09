@@ -7,13 +7,17 @@ import path from 'node:path'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
+  define: {
+    VITE_API_BASE_URL: JSON.stringify(process.env.VITE_API_BASE_URL || 'http://localhost:3333'),
+    VITE_APP_DEBUG: JSON.stringify(process.env.VITE_APP_DEBUG || 'true'),
+    VITE_NODE_ENV: JSON.stringify(process.env.VITE_NODE_ENV || 'development'),
+  },
   plugins: [
     inertia({ ssr: { enabled: false } }),
     react(),
     tailwindcss(),
     adonisjs({ entrypoints: ['inertia/app/app.tsx'], reload: ['resources/views/**/*.edge'] }),
   ],
-
   /**
    * Define aliases for importing modules from
    * your frontend code

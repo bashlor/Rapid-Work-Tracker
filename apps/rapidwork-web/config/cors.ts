@@ -7,6 +7,16 @@ import { defineConfig } from '@adonisjs/cors'
  *
  * https://docs.adonisjs.com/guides/security/cors
  */
+const allowedOriginsEnv = env.get('CORS_ALLOWED_ORIGINS')
+const allowedOrigins = allowedOriginsEnv
+  ? String(allowedOriginsEnv)
+      .split(',')
+      .map((o) => o.trim())
+      .filter(Boolean)
+  : []
+
+const isProd = env.get('NODE_ENV') === 'production'
+
 const corsConfig = defineConfig({
   credentials: true,
   enabled: env.get('CORS_ENABLED', true),
@@ -14,7 +24,8 @@ const corsConfig = defineConfig({
   headers: true,
   maxAge: 90,
   methods: ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  origin: true, // Allow all origins in development
+  // In production, use explicit origins when provided; otherwise allow all (use with care)
+  origin: isProd && allowedOrigins.length > 0 ? allowedOrigins : true,
 })
 
 export default corsConfig
