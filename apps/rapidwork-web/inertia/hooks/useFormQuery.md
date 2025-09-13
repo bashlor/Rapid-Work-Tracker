@@ -1,12 +1,12 @@
 # useFormQuery Hook
 
-Un hook custom qui combine le hook `useForm` d'Inertia avec React Query pour gérer le retry automatique des requêtes de formulaire.
+A custom hook that combines Inertia's `useForm` hook with React Query to handle automatic retry for form requests.
 
 ## Installation
 
-Le hook est déjà inclus dans le projet dans `/inertia/hooks/useFormQuery.tsx`.
+The hook is already included in the project at `/inertia/hooks/useFormQuery.tsx`.
 
-## Utilisation de base
+## Basic Usage
 
 ```tsx
 import { useFormQuery } from '@/hooks/useFormQuery'
@@ -29,14 +29,14 @@ function MyForm() {
       {form.errors.name && <span>{form.errors.name}</span>}
 
       <button type="submit" disabled={form.processing}>
-        {form.processing ? 'Envoi...' : 'Envoyer'}
+        {form.processing ? 'Submitting...' : 'Submit'}
       </button>
     </form>
   )
 }
 ```
 
-## Configuration avancée
+## Advanced Configuration
 
 ```tsx
 const form = useFormQuery(
@@ -45,80 +45,83 @@ const form = useFormQuery(
     email: '',
   },
   {
-    // Nombre de retry (défaut: 3)
+    // Number of retries (default: 3)
     retry: 5,
 
-    // Délai entre les retry (défaut: exponential backoff)
+    // Delay between retries (default: exponential backoff)
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
 
-    // Désactive le retry sur les erreurs de validation (défaut: true)
+    // Disable retry on validation errors (default: true)
     skipRetryOnValidationErrors: true,
 
-    // Affichage automatique des notifications (défaut: true)
+    // Automatic notification display (default: true)
     showNotifications: true,
 
-    // Messages de notification personnalisés
+    // Custom notification messages
     notifications: {
-      success: 'Données sauvegardées avec succès!',
-      error: 'Erreur lors de la sauvegarde',
-      retry: 'Nouvelle tentative en cours...',
+      success: 'Data saved successfully!',
+      error: 'Error while saving',
+      retry: 'Retrying...',
     },
+
+    // Automatically include X-Timezone header (default: true)
+    includeTimezone: true,
 
     // Callbacks
     onRetry: (failureCount, error) => {
-      console.log(`Tentative ${failureCount}`)
+      console.log(`Attempt ${failureCount}`)
     },
     onError: (error) => {
-      console.error('Erreur finale:', error)
+      console.error('Final error:', error)
     },
     onSuccess: (data) => {
-      console.log('Succès:', data)
+      console.log('Success:', data)
     },
   }
 )
 ```
 
-## Gestion intelligente des erreurs
+## Intelligent Error Handling
 
-Le hook distingue automatiquement entre :
+The hook automatically distinguishes between:
 
-### 🔄 Erreurs réseau/serveur (avec retry)
+### 🔄 Network/Server Errors (with retry)
 
-- Erreurs de connexion (timeout, réseau indisponible)
-- Erreurs serveur 5xx
-- Erreurs temporaires
+- Connection errors (timeout, network unavailable)
+- Server errors 5xx
+- Temporary errors
 
-### 🚫 Erreurs de validation (sans retry)
+### 🚫 Validation Errors (without retry)
 
-- Erreurs de validation des champs
-- Email déjà existant
-- Mot de passe trop faible
-- Données invalides
+- Field validation errors
+- Email already exists
+- Password too weak
+- Invalid data
 
 ```tsx
-// Exemple avec gestion des différents types d'erreur
+// Example with different error type handling
 const form = useFormQuery(initialData, {
   onRetry: (failureCount, error) => {
-    // Appelé uniquement pour les erreurs réseau
-    toast.info(`Nouvelle tentative ${failureCount}...`)
+    // Called only for network errors
+    toast.info(`Retry attempt ${failureCount}...`)
   },
   onError: (error) => {
-    // Appelé pour toutes les erreurs finales
+    // Called for all final errors
     if (form.canRetry) {
-      toast.error('Problème de connexion')
+      toast.error('Connection problem')
     } else {
-      toast.error('Veuillez corriger les erreurs du formulaire')
+      toast.error('Please fix form errors')
     }
   },
 })
 
-// Interface utilisateur adaptée
+// Adapted user interface
 {
   form.isError && form.canRetry && (
     <Alert variant="destructive">
       <AlertDescription>
-        Erreur de connexion
-        <Button onClick={form.retry}>Réessayer</Button>
+        Connection error
+        <Button onClick={form.retry}>Retry</Button>
       </AlertDescription>
     </Alert>
   )
@@ -127,7 +130,7 @@ const form = useFormQuery(initialData, {
 {
   form.isError && !form.canRetry && (
     <Alert variant="destructive">
-      <AlertDescription>Veuillez corriger les erreurs dans le formulaire</AlertDescription>
+      <AlertDescription>Please fix errors in the form</AlertDescription>
     </Alert>
   )
 }
@@ -135,70 +138,77 @@ const form = useFormQuery(initialData, {
 
 ## API
 
-### Propriétés héritées d'Inertia useForm
+### Properties inherited from Inertia useForm
 
-- `data` - Les données du formulaire
-- `setData(key, value)` - Mettre à jour une propriété
-- `errors` - Erreurs de validation du serveur
-- `hasErrors` - Booléen indiquant s'il y a des erreurs
-- `processing` - Indique si une requête est en cours
-- `progress` - Progression de l'upload (si applicable)
-- `wasSuccessful` - Indique si la dernière requête a réussi
-- `recentlySuccessful` - Indique si une requête a récemment réussi
-- `transform(callback)` - Transforme les données avant envoi
-- `reset(...fields)` - Remet à zéro des champs spécifiques
-- `clearErrors(...fields)` - Efface les erreurs de validation
-- `cancel()` - Annule la requête en cours
+- `data` - Form data
+- `setData(key, value)` - Update a property
+- `errors` - Server validation errors
+- `formattedErrors` - Errors with custom field labels applied
+- `hasErrors` - Boolean indicating if there are errors
+- `processing` - Indicates if a request is in progress
+- `progress` - Upload progress (if applicable)
+- `wasSuccessful` - Indicates if the last request was successful
+- `recentlySuccessful` - Indicates if a request was recently successful
+- `transform(callback)` - Transform data before sending
+- `reset(...fields)` - Reset specific fields
+- `clearErrors(...fields)` - Clear validation errors
+- `cancel()` - Cancel current request
 
-### Méthodes HTTP avec retry
+### HTTP methods with retry
 
-- `post(url, options)` - Requête POST avec retry
-- `put(url, options)` - Requête PUT avec retry
-- `patch(url, options)` - Requête PATCH avec retry
-- `delete(url, options)` - Requête DELETE avec retry
-- `get(url, options)` - Requête GET avec retry
-- `submit(method, url, options)` - Requête générique avec retry
+- `post(url, options)` - POST request with retry
+- `put(url, options)` - PUT request with retry
+- `patch(url, options)` - PATCH request with retry
+- `delete(url, options)` - DELETE request with retry
+- `get(url, options)` - GET request with retry
+- `submit(method, url, options)` - Generic request with retry
 
-### Propriétés React Query
+### React Query properties
 
-- `canRetry` - Indique si un retry manuel est possible
-- `retry()` - Fonction pour retry manuellement
-- `failureCount` - Nombre de tentatives échouées
-- `error` - Dernière erreur rencontrée
-- `status` - État actuel: 'idle' | 'pending' | 'error' | 'success'
-- `isIdle` - Booléen: état idle
-- `isPending` - Booléen: requête en cours
-- `isError` - Booléen: en erreur
-- `isSuccess` - Booléen: succès
-- `resetMutation()` - Remet à zéro l'état de la mutation
+- `canRetry` - Indicates if manual retry is possible
+- `retry()` - Function to retry manually
+- `failureCount` - Number of failed attempts
+- `error` - Last encountered error
+- `status` - Current state: 'idle' | 'pending' | 'error' | 'success'
+- `isIdle` - Boolean: idle state
+- `isPending` - Boolean: request in progress
+- `isError` - Boolean: in error state
+- `isSuccess` - Boolean: success state
+- `resetMutation()` - Reset mutation state
 
-## Options de configuration
+## Configuration Options
 
 ```tsx
 interface UseFormQueryOptions {
-  // Nombre de retry ou fonction custom
+  // Number of retries or custom function
   retry?: number | boolean | ((failureCount: number, error: any) => boolean)
 
-  // Délai entre les retry
+  // Delay between retries
   retryDelay?: number | ((retryAttempt: number, error: any) => number)
 
-  // Callback appelé avant chaque tentative
+  // Callback called before each attempt
   onRetry?: (failureCount: number, error: any) => void
 
-  // Désactive le retry sur les erreurs de validation (défaut: true)
+  // Disable retry on validation errors (default: true)
   skipRetryOnValidationErrors?: boolean
 
-  // Affiche automatiquement les notifications (défaut: true)
+  // Automatically show notifications (default: true)
   showNotifications?: boolean
 
-  // Messages de notification personnalisés
+  // Custom notification messages
   notifications?: {
-    success?: string // Message de succès
-    error?: string // Message d'erreur
-    retry?: string // Message lors des retry
+    success?: string // Success message
+    error?: string // Error message
+    retry?: string // Retry message
   }
 
-  // Autres options React Query (onError, onSuccess, etc.)
+  // Mapping of field names to their labels for error messages
+  fieldLabels?: Record<string, string>
+
+  // Automatically include X-Timezone header (default: true)
+  includeTimezone?: boolean
+
+  // Other React Query options (onError, onSuccess, etc.)
   onError?: (error: any, variables: any, context: any) => void
   onSuccess?: (data: any, variables: any, context: any) => void
   onMutate?: (variables: any) => any
@@ -206,101 +216,118 @@ interface UseFormQueryOptions {
 }
 ```
 
-## Exemples d'utilisation
+## Usage Examples
 
-### Retry avec gestion d'erreur
+### Retry with error handling
 
 ```tsx
 const form = useFormQuery(initialData, {
   retry: 3,
   onRetry: (failureCount, error) => {
-    console.log(`Tentative ${failureCount} après erreur:`, error)
+    console.log(`Attempt ${failureCount} after error:`, error)
   },
   onError: (error) => {
-    // Cette fonction n'est appelée qu'après épuisement des retry
-    toast.error('Impossible de sauvegarder après plusieurs tentatives')
+    // This function is only called after retries are exhausted
+    toast.error('Unable to save after multiple attempts')
   },
 })
 
-// Interface utilisateur avec retry manuel
+// User interface with manual retry
 {
   form.isError && form.canRetry && (
     <button onClick={form.retry}>
-      Réessayer ({form.failureCount} tentative{form.failureCount > 1 ? 's' : ''})
+      Retry ({form.failureCount} attempt{form.failureCount > 1 ? 's' : ''})
     </button>
   )
 }
 ```
 
-### Retry conditionnel
+### Conditional retry
 
 ```tsx
 const form = useFormQuery(initialData, {
   retry: (failureCount, error) => {
-    // Ne retry que sur les erreurs réseau
+    // Only retry on network errors
     if (error.message.includes('network')) {
       return failureCount < 5
     }
     return false
   },
   retryDelay: (attemptIndex) => {
-    // Délai linéaire pour les erreurs réseau
+    // Linear delay for network errors
     return 2000 * attemptIndex
   },
 })
 ```
 
-### Intégration avec des notifications
+### Integration with notifications
 
 ```tsx
-// Notifications automatiques (recommandé)
+// Automatic notifications (recommended)
 const form = useFormQuery(initialData, {
   showNotifications: true,
   notifications: {
-    success: 'Données sauvegardées!',
-    error: 'Erreur lors de la sauvegarde',
-    retry: 'Nouvelle tentative...',
+    success: 'Data saved!',
+    error: 'Error while saving',
+    retry: 'Retrying...',
   },
 })
 
-// Ou gestion manuelle des notifications
+// Or manual notification handling
 const form = useFormQuery(initialData, {
-  showNotifications: false, // Désactive les notifications automatiques
+  showNotifications: false, // Disable automatic notifications
   onRetry: (failureCount) => {
-    toast.info(`Nouvelle tentative ${failureCount}...`)
+    toast.info(`Retry attempt ${failureCount}...`)
   },
   onError: () => {
-    toast.error('Échec de la sauvegarde')
+    toast.error('Save failed')
   },
   onSuccess: () => {
-    toast.success('Sauvegardé avec succès!')
+    toast.success('Saved successfully!')
   },
 })
 ```
 
-## Avantages
-
-1. **Retry automatique** : Gère automatiquement les erreurs temporaires
-2. **API familière** : Même interface que `useForm` d'Inertia
-3. **Contrôle granulaire** : Configuration flexible du retry
-4. **État riche** : Accès aux informations de status React Query
-5. **Retry manuel** : Possibilité de retry depuis l'interface
-6. **Notifications intégrées** : Affichage automatique des messages de succès/erreur
-7. **Gestion d'erreurs avancée** : Distinction entre erreurs de validation et erreurs réseau
-8. **TypeScript** : Support complet des types
-
-## Migration depuis useForm
-
-Il suffit de remplacer `useForm` par `useFormQuery` :
+### Custom field labels for error messages
 
 ```tsx
-// Avant
+const form = useFormQuery(initialData, {
+  fieldLabels: {
+    firstName: 'First Name',
+    lastName: 'Last Name',
+    emailAddress: 'Email Address',
+  },
+})
+
+// Now form.formattedErrors will use the custom labels
+// Instead of "firstName is required" you'll get "First Name is required"
+```
+
+## Advantages
+
+1. **Automatic retry**: Handles temporary errors automatically
+2. **Familiar API**: Same interface as Inertia's `useForm`
+3. **Granular control**: Flexible retry configuration
+4. **Rich state**: Access to React Query status information
+5. **Manual retry**: Ability to retry from the interface
+6. **Integrated notifications**: Automatic display of success/error messages
+7. **Advanced error handling**: Distinction between validation and network errors
+8. **TypeScript**: Full type support
+9. **Automatic timezone**: Sends user's timezone in X-Timezone header
+10. **Custom field labels**: Better error message formatting
+
+## Migration from useForm
+
+Simply replace `useForm` with `useFormQuery`:
+
+```tsx
+// Before
 import { useForm } from '@inertiajs/react'
 const form = useForm(initialData)
 
-// Après
+// After
 import { useFormQuery } from '@/hooks/useFormQuery'
 const form = useFormQuery(initialData)
 ```
 
-Toutes les propriétés existantes continuent de fonctionner, avec en plus les fonctionnalités de retry.
+All existing properties continue to work, with additional retry functionalities.
