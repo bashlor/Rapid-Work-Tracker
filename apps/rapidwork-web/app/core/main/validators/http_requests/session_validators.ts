@@ -29,13 +29,16 @@ const sessionTimeValidator = vine.createRule((value, _options, field) => {
   }
 })
 
+// Accept ISO 8601 with either 'Z' or timezone offset (e.g., +01:00)
+const ISO_WITH_ZONE = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,})?)?(?:Z|[+-]\d{2}:\d{2})$/
+
 export const createSessionValidator = vine.compile(
   vine
     .object({
       description: vine.string().trim().optional(),
       duration: vine.number().optional(), // in seconds - optional, for effective work time
-      endTime: vine.string().regex(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?Z$/),
-      startTime: vine.string().regex(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?Z$/),
+      endTime: vine.string().regex(ISO_WITH_ZONE),
+      startTime: vine.string().regex(ISO_WITH_ZONE),
       taskId: vine.string().uuid(),
     })
     .use(sessionTimeValidator())
@@ -45,11 +48,10 @@ export const updateSessionValidator = vine.compile(
   vine.object({
     description: vine.string().trim().optional(),
     duration: vine.number().optional(),
-    endTime: vine
-      .string()
-      .regex(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?Z$/)
-      .optional(),
+    startTime: vine.string().regex(ISO_WITH_ZONE).optional(),
+    endTime: vine.string().regex(ISO_WITH_ZONE).optional(),
   })
+  .use(sessionTimeValidator())
 )
 
 export const getSessionsByDateValidator = vine.compile(
@@ -65,9 +67,9 @@ export const updateMultipleSessionsValidator = vine.compile(
         .object({
           description: vine.string().trim().optional(),
           duration: vine.number().optional(),
-          endTime: vine.string().regex(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?Z$/),
+          endTime: vine.string().regex(ISO_WITH_ZONE),
           id: vine.string().uuid().optional(),
-          startTime: vine.string().regex(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?Z$/),
+          startTime: vine.string().regex(ISO_WITH_ZONE),
           taskId: vine.string().uuid(),
         })
         .use(sessionTimeValidator())

@@ -15,7 +15,7 @@ export class DeleteSessionViewModel extends ViewModelActionResponse<
   boolean,
   DeleteSessionOutput
 > {
-  get publicHttpJsonResponse(): DeleteSessionOutput {
+  publicHttpJsonResponse(): DeleteSessionOutput {
     return {
       message: this.entities ? 'Session supprimée' : "La session n'existe pas",
       success: this.entities,

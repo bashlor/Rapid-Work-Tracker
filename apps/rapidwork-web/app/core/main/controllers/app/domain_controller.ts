@@ -31,7 +31,7 @@ export default class DomainController {
     try {
       const body = await validateAndStrip(
         domainWithSubdomainsDtoSchema,
-        viewModel.publicHttpJsonResponse
+        viewModel.publicHttpJsonResponse()
       )
       return response.json(body)
     } catch (error) {
@@ -51,7 +51,7 @@ export default class DomainController {
     const data = await request.validateUsing(deleteDomainValidator)
 
     const viewModel = await deleteDomainAction.execute(user.id, data.params.domain_id)
-    return response.status(202).json(viewModel.publicHttpJsonResponse)
+    return response.status(202).json(viewModel.publicHttpJsonResponse())
   }
 
   @inject()
@@ -66,7 +66,7 @@ export default class DomainController {
     try {
       const body = await validateAndStrip(
         domainWithSubdomainsDtoSchema,
-        viewModel.publicHttpJsonResponse
+        viewModel.publicHttpJsonResponse()
       )
       return response.json(body)
     } catch (error) {
@@ -85,7 +85,7 @@ export default class DomainController {
     try {
       const body = await validateAndStrip(
         getDomainsResponseSchema,
-        viewModel.publicHttpJsonResponse
+        viewModel.publicHttpJsonResponse()
       )
       return response.json(body)
     } catch (error) {

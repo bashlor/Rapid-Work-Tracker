@@ -28,7 +28,34 @@ export class UpdateTaskViewModel extends ViewModelActionResponse<
   TaskEntity,
   TaskWithRelationsDto
 > {
-  get publicHttpJsonResponse(): TaskWithRelationsDto {
+  private domain: DomainEntity | null = null
+
+  private subdomain: null | SubDomainEntity = null
+  constructor(
+    input: UpdateTaskInput,
+    entity: TaskEntity,
+    private domainRepository: LucidDomainRepository,
+    private subdomainRepository: LucidSubDomainRepository
+  ) {
+    super(input, entity)
+  }
+
+  /**
+   * Load related domain and subdomain for the task
+   */
+  async loadRelations(): Promise<void> {
+    const userId = new Id(this.input.userId)
+
+    if (this.entities.domainId) {
+      this.domain = await this.domainRepository.getById(userId, this.entities.domainId)
+    }
+
+    if (this.entities.subDomainId) {
+      this.subdomain = await this.subdomainRepository.getById(userId, this.entities.subDomainId)
+    }
+  }
+
+  publicHttpJsonResponse(): TaskWithRelationsDto {
     return {
       createdAt: this.entities.createdAt.toISOString(),
       description: this.entities.description.value,
@@ -55,33 +82,6 @@ export class UpdateTaskViewModel extends ViewModelActionResponse<
       subDomainId: this.entities.subDomainId?.value || null,
       title: this.entities.title.value,
       updatedAt: this.entities.createdAt.toISOString(),
-    }
-  }
-
-  private domain: DomainEntity | null = null
-  private subdomain: null | SubDomainEntity = null
-
-  constructor(
-    input: UpdateTaskInput,
-    entity: TaskEntity,
-    private domainRepository: LucidDomainRepository,
-    private subdomainRepository: LucidSubDomainRepository
-  ) {
-    super(input, entity)
-  }
-
-  /**
-   * Load related domain and subdomain for the task
-   */
-  async loadRelations(): Promise<void> {
-    const userId = new Id(this.input.userId)
-
-    if (this.entities.domainId) {
-      this.domain = await this.domainRepository.getById(userId, this.entities.domainId)
-    }
-
-    if (this.entities.subDomainId) {
-      this.subdomain = await this.subdomainRepository.getById(userId, this.entities.subDomainId)
     }
   }
 }

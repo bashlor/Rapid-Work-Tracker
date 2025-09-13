@@ -28,7 +28,7 @@ export default class SubDomainController {
 
     const viewModel = await createSubDomainAction.execute(data.name, data.domain_id, user.id)
     try {
-      const body = await validateAndStrip(subdomainDtoSchema, viewModel.publicHttpJsonResponse)
+      const body = await validateAndStrip(subdomainDtoSchema, viewModel.publicHttpJsonResponse())
       return response.json(body)
     } catch (error) {
       return response.badRequest({ error: 'Invalid response format' })
@@ -48,7 +48,7 @@ export default class SubDomainController {
 
     const viewModel = await deleteSubDomainAction.execute(user.id, data.params.subdomain_id)
     try {
-      const body = await validateAndStrip(deleteResultSchema, viewModel.publicHttpJsonResponse)
+      const body = await validateAndStrip(deleteResultSchema, viewModel.publicHttpJsonResponse())
       return response.status(202).json(body)
     } catch (error) {
       return response.badRequest({ error: 'Invalid response format' })
@@ -72,7 +72,7 @@ export default class SubDomainController {
       data.name
     )
     try {
-      const body = await validateAndStrip(subdomainDtoSchema, viewModel.publicHttpJsonResponse)
+      const body = await validateAndStrip(subdomainDtoSchema, viewModel.publicHttpJsonResponse())
       return response.json(body)
     } catch (error) {
       return response.badRequest({ error: 'Invalid response format' })

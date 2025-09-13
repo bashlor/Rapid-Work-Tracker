@@ -1,14 +1,14 @@
 import { useForm, type InertiaFormProps } from '@inertiajs/react'
 import { useMutation, UseMutationOptions } from '@tanstack/react-query'
-import { useRef, useCallback, useMemo } from 'react'
+import { useRef, useCallback } from 'react'
 import * as React from 'react'
 import { useNotification } from './useNotification'
 
-// Simplified types to avoid import conflicts
+// Types simplifiés pour éviter les conflits d'import
 type FormDataConvertible = string | number | boolean | File | Date | null | undefined
 type FormDataType = Record<string, FormDataConvertible>
 
-// Utility function to format error messages
+// Fonction utilitaire pour formatter les messages d'erreur
 function formatErrorMessage(
   fieldName: string,
   message: string,
@@ -16,15 +16,15 @@ function formatErrorMessage(
 ): string {
   const label = fieldLabels?.[fieldName]
   if (label) {
-    // Replace field name with label in the message
+    // Remplace le nom du champ par le label dans le message
     const regex = new RegExp(`\\b${fieldName}\\b`, 'gi')
     return message.replace(regex, label)
   }
 
-  // If no custom label, convert camelCase to readable format
+  // Si pas de label personnalisé, convertit camelCase en format lisible
   const readableFieldName = fieldName
-    .replace(/([A-Z])/g, ' $1') // Add space before uppercase letters
-    .replace(/^./, (str) => str.toUpperCase()) // Capitalize first letter
+    .replace(/([A-Z])/g, ' $1') // Ajoute un espace avant les majuscules
+    .replace(/^./, (str) => str.toUpperCase()) // Met la première lettre en majuscule
     .trim()
 
   const regex = new RegExp(`\\b${fieldName}\\b`, 'gi')
@@ -57,30 +57,28 @@ export interface UseFormQueryOptions
     UseMutationOptions<any, any, { url: string; options?: VisitOptions }, any>,
     'mutationFn'
   > {
-  /** Custom retry count (default: 3) */
+  /** Nombre de retry personnalisé (par défaut: 3) */
   retry?: number | boolean | ((failureCount: number, error: any) => boolean)
-  /** Delay between retries (default: exponential backoff) */
+  /** Délai entre les retry (par défaut: exponentiel backoff) */
   retryDelay?: number | ((retryAttempt: number, error: any) => number)
-  /** Callback called before each attempt */
+  /** Callback appelé avant chaque tentative */
   onRetry?: (failureCount: number, error: any) => void
-  /** Disable retry on validation errors (default: true) */
+  /** Désactive le retry sur les erreurs de validation (par défaut: true) */
   skipRetryOnValidationErrors?: boolean
-  /** Automatically show success/error notifications (default: true) */
+  /** Affiche automatiquement les notifications de succès/erreur (par défaut: true) */
   showNotifications?: boolean
-  /** Custom notification messages */
+  /** Messages de notification personnalisés */
   notifications?: {
     success?: string
     error?: string
     retry?: string
   }
-  /** Mapping of field names to their labels for error messages */
+  /** Mapping des noms de champs vers leurs labels pour les messages d'erreur */
   fieldLabels?: Record<string, string>
-  /** Automatically include X-Timezone header (default: true) */
-  includeTimezone?: boolean
 }
 
 export interface FormQueryHelpers<TData extends FormDataType = FormDataType> {
-  // Inertia form properties
+  // Propriétés du form Inertia
   data: TData
   isDirty: boolean
   errors: Partial<Record<keyof TData, string>>
@@ -99,7 +97,7 @@ export interface FormQueryHelpers<TData extends FormDataType = FormDataType> {
   setError: InertiaFormProps<TData>['setError']
   cancel: () => void
 
-  // HTTP methods with retry
+  // Méthodes HTTP avec retry
   post: (url: string, options?: VisitOptions) => void
   put: (url: string, options?: VisitOptions) => void
   patch: (url: string, options?: VisitOptions) => void
@@ -111,7 +109,7 @@ export interface FormQueryHelpers<TData extends FormDataType = FormDataType> {
     options?: VisitOptions
   ) => void
 
-  // React Query properties
+  // Propriétés React Query
   canRetry: boolean
   retry: () => void
   failureCount: number
@@ -125,11 +123,11 @@ export interface FormQueryHelpers<TData extends FormDataType = FormDataType> {
 }
 
 /**
- * Custom hook that combines Inertia's useForm with React Query to handle retry
+ * Hook custom qui combine useForm d'Inertia avec React Query pour gérer le retry
  *
- * @param initialData - Initial form data
- * @param options - Configuration options for React Query
- * @returns Object with the same properties as useForm + retry functionalities
+ * @param initialData - Données initiales du formulaire
+ * @param options - Options de configuration pour React Query
+ * @returns Objet avec les mêmes propriétés que useForm + fonctionnalités de retry
  *
  * @example
  * ```tsx
@@ -140,9 +138,9 @@ export interface FormQueryHelpers<TData extends FormDataType = FormDataType> {
  * }, {
  *   retry: 3,
  *   retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
- *   onError: (error) => console.error('Error:', error),
- *   onSuccess: (data) => console.log('Success:', data),
- *   onRetry: (failureCount, error) => console.log(`Attempt ${failureCount}`)
+ *   onError: (error) => console.error('Erreur:', error),
+ *   onSuccess: (data) => console.log('Succès:', data),
+ *   onRetry: (failureCount, error) => console.log(`Tentative ${failureCount}`)
  * })
  *
  * const handleSubmit = (e: React.FormEvent) => {
@@ -162,7 +160,6 @@ export function useFormQuery<TData extends FormDataType = FormDataType>(
     showNotifications = true,
     notifications = {},
     fieldLabels = {},
-    includeTimezone = true,
     onRetry,
     onError,
     onSuccess,
@@ -171,60 +168,32 @@ export function useFormQuery<TData extends FormDataType = FormDataType>(
     ...mutationOptions
   } = options
 
-  // Hook for notifications
+  // Hook pour les notifications
   const { showNotification } = useNotification()
 
-  // Use Inertia's useForm hook
+  // Utilise le hook useForm d'Inertia
   const form = useForm<TData>(initialData)
 
-  // Reference to store last submission parameters
+  // Référence pour stocker les derniers paramètres de soumission
   const lastSubmissionRef = useRef<{
     method: 'get' | 'post' | 'put' | 'patch' | 'delete'
     url: string
     options?: VisitOptions
   } | null>(null)
 
-  // Detect user's timezone
-  const userTimezone = useMemo(() => {
-    try {
-      return Intl.DateTimeFormat().resolvedOptions().timeZone
-    } catch (error) {
-      console.warn('Failed to detect timezone, fallback to UTC:', error)
-      return 'UTC'
-    }
-  }, [])
-
-  // Function to enhance options with timezone header
-  const enhanceOptionsWithTimezone = useCallback((options?: VisitOptions): VisitOptions => {
-    if (!includeTimezone) {
-      return options || {}
-    }
-
-    return {
-      ...options,
-      headers: {
-        'X-Timezone': userTimezone,
-        ...options?.headers,
-      },
-    }
-  }, [userTimezone, includeTimezone])
-
-  // React Query mutation to handle retry
+  // Mutation React Query pour gérer le retry
   const mutation = useMutation<any, any, { url: string; options?: VisitOptions }>({
     mutationFn: async ({ url, options: visitOptions }: { url: string; options?: VisitOptions }) => {
       return new Promise((resolve, reject) => {
-        // Store parameters for potential retry
+        // Stocke les paramètres pour un retry éventuel
         lastSubmissionRef.current = {
           method: visitOptions?.method || 'post',
           url,
           options: visitOptions,
         }
 
-        // Enhance options with timezone header
-        const enhancedVisitOptions = enhanceOptionsWithTimezone(visitOptions)
-
         const enhancedOptions: VisitOptions = {
-          ...enhancedVisitOptions,
+          ...visitOptions,
           onSuccess: (page: any) => {
             resolve(page)
             visitOptions?.onSuccess?.(page)
@@ -248,39 +217,39 @@ export function useFormQuery<TData extends FormDataType = FormDataType>(
           },
         }
 
-        // Use Inertia form's submit method
+        // Utilise la méthode submit du form Inertia
         form.submit(visitOptions?.method || 'post', url, enhancedOptions)
       })
     },
     retry: (failureCount, error) => {
-      // Show retry notification if enabled
+      // Affiche une notification de retry si activé
       if (showNotifications && failureCount > 0) {
-        const retryMessage = notifications.retry || `Retry attempt ${failureCount}...`
+        const retryMessage = notifications.retry || `Nouvelle tentative ${failureCount}...`
         showNotification('info', retryMessage)
       }
 
-      // Call onRetry callback if provided
+      // Appelle le callback onRetry si fourni
       if (onRetry) {
         onRetry(failureCount, error)
       }
 
-      // Don't retry on validation errors if option is enabled
+      // Ne pas retry sur les erreurs de validation si l'option est activée
       if (skipRetryOnValidationErrors && error instanceof Error) {
         try {
           const errorMessage = error.message
-          // If error contains validation errors JSON
+          // Si l'erreur contient des erreurs de validation JSON
           if (errorMessage.includes('{') && errorMessage.includes('}')) {
             const parsedError = JSON.parse(errorMessage)
-            // If it's a validation errors object, don't retry
+            // Si c'est un objet d'erreurs de validation, ne pas retry
             if (typeof parsedError === 'object' && parsedError !== null) {
               return false
             }
           }
-          // Check for validation errors by status code 422
+          // Vérifier les erreurs de validation par status code 422
           if (errorMessage.includes('422') || errorMessage.includes('Unprocessable Entity')) {
             return false
           }
-          // Also check if error looks like a validation error
+          // Aussi vérifier si l'erreur ressemble à une erreur de validation
           if (
             errorMessage.toLowerCase().includes('validation') ||
             errorMessage.toLowerCase().includes('invalid') ||
@@ -289,11 +258,11 @@ export function useFormQuery<TData extends FormDataType = FormDataType>(
             return false
           }
         } catch (e) {
-          // If we can't parse the error, continue retry for network errors
+          // Si on ne peut pas parser l'erreur, continuer le retry pour les erreurs réseau
         }
       }
 
-      // Handle retry based on type
+      // Gère le retry selon le type
       if (typeof retry === 'boolean') {
         return retry
       }
@@ -315,9 +284,9 @@ export function useFormQuery<TData extends FormDataType = FormDataType>(
       }
     },
     onError: (error, variables, context) => {
-      // Show error notification if enabled
+      // Affiche une notification d'erreur si activé
       if (showNotifications) {
-        const errorMessage = notifications.error || 'An error occurred'
+        const errorMessage = notifications.error || 'Une erreur est survenue'
         showNotification('error', errorMessage)
       }
 
@@ -326,7 +295,7 @@ export function useFormQuery<TData extends FormDataType = FormDataType>(
       }
     },
     onSuccess: (data, variables, context) => {
-      // Show success notification if enabled
+      // Affiche une notification de succès si activé
       if (showNotifications && notifications.success) {
         showNotification('success', notifications.success)
       }
@@ -343,7 +312,7 @@ export function useFormQuery<TData extends FormDataType = FormDataType>(
     ...mutationOptions,
   })
 
-  // Functions for different HTTP methods
+  // Fonctions pour les différentes méthodes HTTP
   const post = useCallback(
     (url: string, options?: VisitOptions) => {
       mutation.mutate({ url, options: { ...options, method: 'post' } })
@@ -386,7 +355,7 @@ export function useFormQuery<TData extends FormDataType = FormDataType>(
     [mutation]
   )
 
-  // Manual retry function
+  // Fonction de retry manuel
   const retryMutation = useCallback(() => {
     if (lastSubmissionRef.current) {
       const { method, url, options } = lastSubmissionRef.current
@@ -394,7 +363,7 @@ export function useFormQuery<TData extends FormDataType = FormDataType>(
     }
   }, [submit])
 
-  // Calculate formatted errors with labels
+  // Calcule les erreurs formatées avec les labels
   const formattedErrors = React.useMemo(() => {
     const formatted: Partial<Record<keyof TData, string>> = {}
 
@@ -412,7 +381,7 @@ export function useFormQuery<TData extends FormDataType = FormDataType>(
   }, [form.errors, fieldLabels])
 
   return {
-    // Inertia form properties
+    // Propriétés du form Inertia
     data: form.data,
     isDirty: form.isDirty,
     processing: form.processing || mutation.isPending,
@@ -431,7 +400,7 @@ export function useFormQuery<TData extends FormDataType = FormDataType>(
     setError: form.setError,
     cancel: form.cancel,
 
-    // HTTP methods with retry
+    // Méthodes HTTP avec retry
     post,
     put,
     patch,
@@ -439,7 +408,7 @@ export function useFormQuery<TData extends FormDataType = FormDataType>(
     get,
     submit,
 
-    // React Query properties
+    // Propriétés React Query
     canRetry: mutation.isError && !mutation.isPending,
     retry: retryMutation,
     failureCount: mutation.failureCount,

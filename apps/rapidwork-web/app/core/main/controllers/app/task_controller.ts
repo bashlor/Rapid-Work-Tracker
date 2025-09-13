@@ -111,7 +111,10 @@ export default class TaskController {
 
     const viewModel = await getTasksAction.execute(user.id)
     try {
-      const body = await validateAndStrip(getTasksResponseSchema, viewModel.publicHttpJsonResponse)
+      const body = await validateAndStrip(
+        getTasksResponseSchema,
+        viewModel.publicHttpJsonResponse()
+      )
       return response.json(body)
     } catch (error) {
       return response.badRequest({ error: 'Invalid response format' })
@@ -138,7 +141,7 @@ export default class TaskController {
     try {
       const body = await validateAndStrip(
         taskWithRelationsDtoSchema,
-        viewModel.publicHttpJsonResponse
+        viewModel.publicHttpJsonResponse()
       )
       return response.json(body)
     } catch (error) {

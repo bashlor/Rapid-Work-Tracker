@@ -244,11 +244,13 @@ const WorkSessionEntry: React.FC<WorkSessionEntryProps> = ({
         
         success('Session créée avec succès')
       } else {
-        // Session existante - appeler updateSession
+        
         await updateSession(formData.id, {
+          startTime: sessionData.startTime,
           endTime: sessionData.endTime,
           description: sessionData.description,
           duration: sessionData.duration,
+          taskId: formData.taskId,
         })
         
         // Notifier le parent que la session a été mise à jour

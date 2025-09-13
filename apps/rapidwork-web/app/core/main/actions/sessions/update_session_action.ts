@@ -7,6 +7,7 @@ export interface UpdateSessionData {
   description?: string
   duration?: number
   endTime?: string
+  startTime?: string
 }
 
 @inject()
@@ -19,14 +20,17 @@ export class UpdateSessionAction {
       duration: data.duration,
       endTime: data.endTime,
       id: sessionId,
+      startTime: data.startTime,
       userId,
     })
+
     return new UpdateSessionViewModel(
       {
         description: data.description,
         duration: data.duration,
         endTime: data.endTime,
         id: sessionId,
+        startTime: data.startTime,
         userId,
       },
       session

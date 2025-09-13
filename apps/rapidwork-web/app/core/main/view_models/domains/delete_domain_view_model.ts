@@ -15,7 +15,7 @@ export class DeleteDomainViewModel extends ViewModelActionResponse<
   boolean,
   DeleteDomainOutput
 > {
-  get publicHttpJsonResponse(): DeleteDomainOutput {
+  publicHttpJsonResponse(): DeleteDomainOutput {
     return {
       message: this.entities ? 'Domain deleted successfully' : 'Failed to delete domain',
       success: this.entities,

@@ -15,7 +15,7 @@ export class DeleteSubdomainViewModel extends ViewModelActionResponse<
   boolean,
   DeleteSubdomainOutput
 > {
-  get publicHttpJsonResponse(): DeleteSubdomainOutput {
+  publicHttpJsonResponse(): DeleteSubdomainOutput {
     return {
       message: this.entities ? 'Subdomain deleted successfully' : 'Failed to delete subdomain',
       success: this.entities,

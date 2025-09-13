@@ -22,44 +22,9 @@ export class GetTasksViewModel extends ViewModelActionResponse<
   TaskEntity[],
   TaskWithRelationsDto[]
 > {
-  get publicHttpJsonResponse(): TaskWithRelationsDto[] {
-    return this.entities.map((task) => {
-      const domain = task.domainId ? this.domains.get(task.domainId.value) : null
-      const subdomain = task.subDomainId ? this.subdomains.get(task.subDomainId.value) : null
-
-      return {
-        createdAt: task.createdAt.toISOString(),
-        description: task.description.value,
-        domain: domain
-          ? {
-              createdAt: domain.createdAt.toISOString(),
-              id: domain.id.value,
-              name: domain.name.value,
-              updatedAt: domain.createdAt.toISOString(),
-            }
-          : null,
-        domainId: task.domainId?.value || null,
-        id: task.id.value,
-        status: task.status.value,
-        subdomain: subdomain
-          ? {
-              createdAt: subdomain.createdAt.toISOString(),
-              domainId: subdomain.domainId.value,
-              id: subdomain.id.value,
-              name: subdomain.name.value,
-              updatedAt: subdomain.createdAt.toISOString(),
-            }
-          : null,
-        subDomainId: task.subDomainId?.value || null,
-        title: task.title.value,
-        updatedAt: task.createdAt.toISOString(),
-      }
-    })
-  }
-
   private domains: Map<string, DomainEntity> = new Map()
-  private subdomains: Map<string, SubDomainEntity> = new Map()
 
+  private subdomains: Map<string, SubDomainEntity> = new Map()
   constructor(
     input: GetTasksInput,
     entities: TaskEntity[],
@@ -103,5 +68,40 @@ export class GetTasksViewModel extends ViewModelActionResponse<
         this.subdomains.set(subdomainId, subdomain)
       }
     }
+  }
+
+  publicHttpJsonResponse(): TaskWithRelationsDto[] {
+    return this.entities.map((task) => {
+      const domain = task.domainId ? this.domains.get(task.domainId.value) : null
+      const subdomain = task.subDomainId ? this.subdomains.get(task.subDomainId.value) : null
+
+      return {
+        createdAt: task.createdAt.toISOString(),
+        description: task.description.value,
+        domain: domain
+          ? {
+              createdAt: domain.createdAt.toISOString(),
+              id: domain.id.value,
+              name: domain.name.value,
+              updatedAt: domain.createdAt.toISOString(),
+            }
+          : null,
+        domainId: task.domainId?.value || null,
+        id: task.id.value,
+        status: task.status.value,
+        subdomain: subdomain
+          ? {
+              createdAt: subdomain.createdAt.toISOString(),
+              domainId: subdomain.domainId.value,
+              id: subdomain.id.value,
+              name: subdomain.name.value,
+              updatedAt: subdomain.createdAt.toISOString(),
+            }
+          : null,
+        subDomainId: task.subDomainId?.value || null,
+        title: task.title.value,
+        updatedAt: task.createdAt.toISOString(),
+      }
+    })
   }
 }

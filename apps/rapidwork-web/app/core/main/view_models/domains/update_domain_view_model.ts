@@ -2,7 +2,7 @@ import type { Domain as DomainEntity } from 'domain-rapid-work'
 
 import { ViewModelActionResponse } from '#view_models/base/view_model_action_response'
 
-import { DomainWithSubdomainsDto } from './domain_dto.js'
+import { DomainWithSubdomainsDto } from '../../../../dtos/domain_dto.js'
 
 interface UpdateDomainInput {
   domainId: string
@@ -15,7 +15,7 @@ export class UpdateDomainViewModel extends ViewModelActionResponse<
   DomainEntity,
   DomainWithSubdomainsDto
 > {
-  get publicHttpJsonResponse(): DomainWithSubdomainsDto {
+  publicHttpJsonResponse(): DomainWithSubdomainsDto {
     return {
       createdAt: this.entities.createdAt.toISOString(),
       id: this.entities.id.value,
