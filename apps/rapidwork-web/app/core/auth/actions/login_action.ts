@@ -14,6 +14,7 @@ export interface LoginParams {
 export type LoginResult =
   | {
       error: string
+      status: number
       success: false
     }
   | {
@@ -39,8 +40,19 @@ export class LoginAction {
         user,
       }
     } catch (error) {
+      // Distinguish invalid credentials from infrastructure/DB errors
+      const code = (error as any)?.code
+      if (code === 'E_INVALID_CREDENTIALS') {
+        return {
+          error: 'Invalid email or password',
+          status: 401,
+          success: false,
+        }
+      }
+
       return {
-        error: error.message || 'Login failed',
+        error: 'Unexpected error while authenticating. Please try again later.',
+        status: 500,
         success: false,
       }
     }
