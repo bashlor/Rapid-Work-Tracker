@@ -23,6 +23,7 @@ function getEnvVar(key: string, defaultValue: string): string {
 
   // Fallback to import.meta.env for Vite
   if (typeof import.meta !== 'undefined' && import.meta.env) {
+    console.log(import.meta.env)
     return import.meta.env[viteKey] || import.meta.env[key] || defaultValue
   }
 
