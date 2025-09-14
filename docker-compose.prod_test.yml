@@ -17,6 +17,8 @@ services:
       DB_USER: rapidwork
       DB_PASSWORD: rapidwork_password
       DB_DATABASE: rapidwork_test
+      CORS_ENABLED: false
+      CORS_ALLOWED_ORIGINS: '*'
     ports:
       - '3333:3333'
     depends_on:

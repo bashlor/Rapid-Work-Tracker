@@ -10,12 +10,8 @@ interface DeleteDomainOutput {
   success: boolean
 }
 
-export class DeleteDomainViewModel extends ViewModelActionResponse<
-  DeleteDomainInput,
-  boolean,
-  DeleteDomainOutput
-> {
-  get publicHttpJsonResponse(): DeleteDomainOutput {
+export class DeleteDomainViewModel extends ViewModelActionResponse<DeleteDomainInput, boolean> {
+  publicHttpJsonResponse(): DeleteDomainOutput {
     return {
       message: this.entities ? 'Domain deleted successfully' : 'Failed to delete domain',
       success: this.entities,

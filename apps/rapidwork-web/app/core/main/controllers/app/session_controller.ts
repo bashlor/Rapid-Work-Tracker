@@ -36,8 +36,10 @@ export default class SessionController {
     const user = auth.getUserOrFail()
     const data = await request.validateUsing(createSessionValidator)
 
+    const userTimezone = request.header('X-Timezone') || 'UTC'
     const vm = await this.createSessionAction.execute(user.id, data)
-    const body = await validateAndStrip(sessionDtoSchema, vm.publicHttpJsonResponse)
+    const dto = vm.publicHttpJsonResponse(userTimezone)
+    const body = await validateAndStrip(sessionDtoSchema, dto)
     return { data: body }
   }
 
@@ -45,34 +47,37 @@ export default class SessionController {
     const user = auth.getUserOrFail()
 
     const vm = await this.deleteSessionAction.execute({ id: params.id, userId: user.id })
-    return vm.publicHttpJsonResponse
+    return vm.publicHttpJsonResponse()
   }
 
   async getByDate({ auth, request }: HttpContext) {
     const user = auth.getUserOrFail()
     const { date } = await request.validateUsing(getSessionsByDateValidator)
 
+    const userTimezone = request.header('X-Timezone') || 'UTC'
     const vm = await this.getSessionsByDateAction.execute({ date, userId: user.id })
-    const body = await validateAndStrip(getSessionsResponseSchema, vm.publicHttpJsonResponse)
+    const dto = vm.publicHttpJsonResponse(userTimezone)
+    const body = await validateAndStrip(getSessionsResponseSchema, dto)
     return { data: body }
   }
 
-  async show({ auth, inertia }: HttpContext) {
+  async show({ auth, inertia, request }: HttpContext) {
     const user = auth.getUserOrFail()
 
-    // Récupérer les domaines et tâches pour l'interface
+    const userTimezone = request.header('X-Timezone') || 'UTC'
+
+    // Get domains and tasks for the interface
     const domains = await this.getDomainsAction.execute(user.id)
     const tasks = await this.getTasksAction.execute(user.id)
 
-    // Récupérer les sessions d'aujourd'hui par défaut (format YYYY-MM-DD)
-    const today = new Date().toISOString().split('T')[0] // Format: 2025-09-01
+    const today = new Date().toISOString().split('T')[0]
 
     const vm = await this.getSessionsByDateAction.execute({ date: today, userId: user.id })
 
     return inertia.render('sessions', {
       domains,
       selectedDate: today,
-      sessions: vm.publicHttpJsonResponse,
+      sessions: vm.publicHttpJsonResponse(userTimezone),
       tasks,
     })
   }
@@ -81,8 +86,11 @@ export default class SessionController {
     const user = auth.getUserOrFail()
     const data = await request.validateUsing(updateSessionValidator)
 
+    const userTimezone = request.header('X-Timezone') || 'UTC'
     const vm = await this.updateSessionAction.execute(user.id, params.id, data)
-    const body = await validateAndStrip(sessionDtoSchema, vm.publicHttpJsonResponse)
+
+    const dto = vm.publicHttpJsonResponse(userTimezone)
+    const body = await validateAndStrip(sessionDtoSchema, dto)
     return { data: body }
   }
 

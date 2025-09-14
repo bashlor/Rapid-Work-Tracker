@@ -10,12 +10,8 @@ interface DeleteSessionOutput {
   success: boolean
 }
 
-export class DeleteSessionViewModel extends ViewModelActionResponse<
-  DeleteSessionInput,
-  boolean,
-  DeleteSessionOutput
-> {
-  get publicHttpJsonResponse(): DeleteSessionOutput {
+export class DeleteSessionViewModel extends ViewModelActionResponse<DeleteSessionInput, boolean> {
+  publicHttpJsonResponse(): DeleteSessionOutput {
     return {
       message: this.entities ? 'Session supprimée' : "La session n'existe pas",
       success: this.entities,

@@ -24,6 +24,16 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@latest --activate
 ENV PNPM_HOME=/usr/local/bin
 
+# Build arguments for frontend environment variables
+ARG VITE_API_BASE_URL
+ARG VITE_APP_DEBUG
+ARG VITE_NODE_ENV
+
+# Set environment variables for build
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_APP_DEBUG=$VITE_APP_DEBUG
+ENV VITE_NODE_ENV=$VITE_NODE_ENV
+
 # First install the dependencies (as they change less often)
 COPY --from=builder /app/out/json/ .
 RUN pnpm install --ignore-scripts

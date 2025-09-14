@@ -26,6 +26,12 @@ function getEnvVar(key: string, defaultValue: string): string {
     return import.meta.env[viteKey] || import.meta.env[key] || defaultValue
   }
 
+  // Try window.env (runtime variables via /env.js endpoint)
+  if (typeof window !== 'undefined' && (window as any).env) {
+    const windowValue = (window as any).env[key] || (window as any).env[viteKey]
+    if (windowValue) return windowValue
+  }
+
   // Fallback to process.env for compatibility
   if (typeof process !== 'undefined' && process.env) {
     return process.env[viteKey] || process.env[key] || defaultValue

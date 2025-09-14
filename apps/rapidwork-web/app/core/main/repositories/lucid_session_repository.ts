@@ -1,5 +1,7 @@
 import SessionModel from '#models/session'
+import db from '@adonisjs/lucid/services/db'
 import { DateTime, Id, SessionCollection, Session as SessionEntity } from 'domain-rapid-work'
+import { DateTime as DateTimeLuxon } from 'luxon'
 
 import { SessionMapper } from '../mappers/session_mapper.js'
 
@@ -80,9 +82,9 @@ export class LucidSessionRepository extends SessionCollection {
     await SessionModel.create({
       description: sessionModelData.description,
       duration: sessionModelData.duration,
-      endTime: sessionModelData.endTime,
+      endTime: DateTimeLuxon.fromISO(sessionModelData.endTime).startOf('second'),
       id: sessionModelData.id,
-      startTime: sessionModelData.startTime,
+      startTime: DateTimeLuxon.fromISO(sessionModelData.startTime).startOf('second'),
       taskId: sessionModelData.taskId,
       userId: sessionModelData.userId,
     })
@@ -94,7 +96,8 @@ export class LucidSessionRepository extends SessionCollection {
     session.merge({
       description: sessionData.description,
       duration: sessionData.duration,
-      endTime: sessionData.endTime,
+      endTime: DateTimeLuxon.fromISO(sessionData.endTime).startOf('second'),
+      startTime: DateTimeLuxon.fromISO(sessionData.startTime).startOf('second'),
     })
     await session.save()
     return SessionMapper.toDomain(session)!
@@ -102,7 +105,7 @@ export class LucidSessionRepository extends SessionCollection {
 
   async updateMultiple(sessions: SessionEntity[]): Promise<void> {
     // Utiliser une transaction pour assurer l'atomicité
-    await SessionModel.transaction(async (trx) => {
+    await db.transaction(async (trx) => {
       for (const sessionEntity of sessions) {
         const sessionData = SessionMapper.fromDomain(sessionEntity)
 
@@ -116,8 +119,8 @@ export class LucidSessionRepository extends SessionCollection {
           existingSession.merge({
             description: sessionData.description,
             duration: sessionData.duration,
-            endTime: sessionData.endTime,
-            startTime: sessionData.startTime,
+            endTime: DateTimeLuxon.fromISO(sessionData.endTime).startOf('second'),
+            startTime: DateTimeLuxon.fromISO(sessionData.startTime).startOf('second'),
             taskId: sessionData.taskId,
           })
           await existingSession.save()
@@ -127,9 +130,9 @@ export class LucidSessionRepository extends SessionCollection {
             {
               description: sessionData.description,
               duration: sessionData.duration,
-              endTime: sessionData.endTime,
+              endTime: DateTimeLuxon.fromISO(sessionData.endTime).startOf('second'),
               id: sessionData.id,
-              startTime: sessionData.startTime,
+              startTime: DateTimeLuxon.fromISO(sessionData.startTime).startOf('second'),
               taskId: sessionData.taskId,
               userId: sessionData.userId,
             },

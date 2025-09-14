@@ -39,7 +39,7 @@ export default class TaskController {
     try {
       const body = await validateAndStrip(
         taskWithRelationsDtoSchema,
-        viewModel.publicHttpJsonResponse
+        viewModel.publicHttpJsonResponse()
       )
       return response.status(201).json(body)
     } catch (error) {
@@ -57,7 +57,7 @@ export default class TaskController {
     const data = await request.validateUsing(deleteTaskValidator)
     const viewModel = await deleteTaskAction.execute(data.params.id, user.id)
     try {
-      const body = await validateAndStrip(deleteResultSchema, viewModel.publicHttpJsonResponse)
+      const body = await validateAndStrip(deleteResultSchema, viewModel.publicHttpJsonResponse())
       return response.status(202).json(body)
     } catch (error) {
       return response.badRequest({ error: 'Invalid response format' })
@@ -76,7 +76,10 @@ export default class TaskController {
 
     const viewModel = await getTasksByDomainAction.execute(user.id, params.domainId)
     try {
-      const body = await validateAndStrip(getTasksResponseSchema, viewModel.publicHttpJsonResponse)
+      const body = await validateAndStrip(
+        getTasksResponseSchema,
+        viewModel.publicHttpJsonResponse()
+      )
       return response.json(body)
     } catch (error) {
       return response.badRequest({ error: 'Invalid response format' })
@@ -95,7 +98,10 @@ export default class TaskController {
 
     const viewModel = await getTasksBySubdomainAction.execute(user.id, params.subdomainId)
     try {
-      const body = await validateAndStrip(getTasksResponseSchema, viewModel.publicHttpJsonResponse)
+      const body = await validateAndStrip(
+        getTasksResponseSchema,
+        viewModel.publicHttpJsonResponse()
+      )
       return response.json(body)
     } catch (error) {
       return response.badRequest({ error: 'Invalid response format' })
@@ -111,7 +117,10 @@ export default class TaskController {
 
     const viewModel = await getTasksAction.execute(user.id)
     try {
-      const body = await validateAndStrip(getTasksResponseSchema, viewModel.publicHttpJsonResponse)
+      const body = await validateAndStrip(
+        getTasksResponseSchema,
+        viewModel.publicHttpJsonResponse()
+      )
       return response.json(body)
     } catch (error) {
       return response.badRequest({ error: 'Invalid response format' })
@@ -138,7 +147,7 @@ export default class TaskController {
     try {
       const body = await validateAndStrip(
         taskWithRelationsDtoSchema,
-        viewModel.publicHttpJsonResponse
+        viewModel.publicHttpJsonResponse()
       )
       return response.json(body)
     } catch (error) {

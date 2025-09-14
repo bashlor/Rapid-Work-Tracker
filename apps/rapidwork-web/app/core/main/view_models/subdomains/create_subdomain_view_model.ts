@@ -2,8 +2,6 @@ import type { SubDomain as SubDomainEntity } from 'domain-rapid-work'
 
 import { ViewModelActionResponse } from '#view_models/base/view_model_action_response'
 
-import { SubdomainDto } from './subdomain_dto.js'
-
 interface CreateSubdomainInput {
   domainId: string
   name: string
@@ -12,10 +10,9 @@ interface CreateSubdomainInput {
 
 export class CreateSubdomainViewModel extends ViewModelActionResponse<
   CreateSubdomainInput,
-  SubDomainEntity,
-  SubdomainDto
+  SubDomainEntity
 > {
-  get publicHttpJsonResponse(): SubdomainDto {
+  publicHttpJsonResponse() {
     return {
       createdAt: this.entities.createdAt.toISOString(),
       domainId: this.entities.domainId.value,

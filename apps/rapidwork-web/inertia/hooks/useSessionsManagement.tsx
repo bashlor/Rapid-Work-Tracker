@@ -97,15 +97,20 @@ export const useSessionsManagement = (selectedDate: Date, initialSessions?: Back
 
   const updateSessionMutation = useMutation<BackendWorkSession, Error, { sessionId: string; sessionData: Partial<SessionFormData> }>({
     mutationFn: async ({ sessionId, sessionData }): Promise<BackendWorkSession> => {
-      const response = await tuyau.api.sessions({ id: sessionId }).$put({
-        description: sessionData.description,
-        endTime: sessionData.endTime,
+      const response = await tuyau.api.sessions.$put({
+        sessions: [
+          {
+            id: sessionId,
+            taskId: sessionData.taskId!,
+            startTime: sessionData.startTime!,
+            endTime: sessionData.endTime!,
+            description: sessionData.description,
+          },
+        ],
       })
-      
       const responseData = response as any
-      
-      // Retourner directement les données Tuyau typées
-      return responseData.data as BackendWorkSession
+      const updated = responseData?.data?.data?.[0] || responseData?.data
+      return updated as BackendWorkSession
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: sessionsKeys.byDate(dateString) })

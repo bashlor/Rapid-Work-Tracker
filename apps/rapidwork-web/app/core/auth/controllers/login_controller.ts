@@ -25,7 +25,7 @@ export default class LoginController {
         error: result.error || 'Login failed',
         success: false,
       })
-      return response.status(401).json(body)
+      return response.status(result.status ?? 401).json(body)
     }
 
     const body = await validateAndStrip(authSuccessSchema, {

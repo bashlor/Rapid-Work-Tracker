@@ -10,6 +10,7 @@ export interface UpdateSessionInput {
   duration?: number
   endTime?: string
   id: string
+  startTime?: string
   userId: string
 }
 
@@ -22,19 +23,28 @@ export class UpdateSessionFeature implements Feature<UpdateSessionInput, Session
       throw new Error('Session not found')
     }
 
-    // Créer une nouvelle session avec les modifications en utilisant les bonnes méthodes
-    let updatedSession = existingSession
+    const newStart = input.startTime !== undefined
+      ? new DateTime(input.startTime)
+      : existingSession.getStartTime()
 
-    if (input.endTime !== undefined) {
-      updatedSession = updatedSession.updateEndTime(new DateTime(input.endTime))
-    }
+    const newEnd = input.endTime !== undefined
+      ? new DateTime(input.endTime)
+      : existingSession.getEndTime()
 
-    if (input.description !== undefined) {
-      updatedSession = updatedSession.updateDescription(new Description(input.description))
-    }
+    const newDesc = input.description !== undefined
+      ? new Description(input.description)
+      : existingSession.getDescription()
 
-    // Note: duration est maintenant calculée automatiquement à partir de startTime et endTime
-    // donc on n'a plus besoin de la gérer explicitement
+    const updatedSession = Session.create(
+      existingSession.getId(),
+      existingSession.getTaskId(),
+      existingSession.getUserId(),
+      newStart,
+      newEnd,
+      newDesc,
+      existingSession.getCreatedAt(),
+      DateTime.now()
+    )
 
     return await this.sessionCollection.update(updatedSession)
   }

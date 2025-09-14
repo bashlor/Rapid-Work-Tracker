@@ -2,8 +2,6 @@
 
 import type { BackendWorkSession } from './backend'
 
-import { DomainWithSubdomainsDto } from '../../app/core/main/view_models/domains/domain_dto'
-
 // Base props that all pages receive
 export interface BasePageProps {
   errors?: Record<string, string[]>
@@ -49,7 +47,14 @@ export interface ServerErrorPageProps extends BasePageProps {
 
 // Task selection page props
 export interface TaskSelectionPageProps extends BasePageProps {
-  domains: DomainWithSubdomainsDto[]
+  domains: {
+    id: string
+    name: string
+    subdomains: {
+      id: string
+      name: string
+    }[]
+  }
 }
 
 export interface User {

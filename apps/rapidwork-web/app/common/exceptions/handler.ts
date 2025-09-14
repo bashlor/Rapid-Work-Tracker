@@ -35,14 +35,14 @@ export default class HttpExceptionHandler extends ExceptionHandler {
    * response to the client
    */
   async handle(error: unknown, ctx: HttpContext) {
-    // Si c'est une erreur de validation Vine
+    // Handle Vine validation errors
     if (error instanceof vineErrors.E_VALIDATION_ERROR) {
       const acceptsJson = ctx.request.accepts(['html', 'json']) === 'json'
       const isInertiaRequest = ctx.request.header('X-Inertia')
 
-      // Pour les requêtes API ou JSON
+      // For API or JSON requests
       if (acceptsJson) {
-        // Transformer les erreurs VineJS dans le format désiré
+        // Transform VineJS errors to desired format
         const formattedErrors = Object.entries(error.messages).map(([field, message]) => ({
           field,
           message: message as string,
@@ -54,9 +54,9 @@ export default class HttpExceptionHandler extends ExceptionHandler {
         })
       }
 
-      // Pour les requêtes Inertia (formulaires)
+      // For Inertia requests (forms)
       if (isInertiaRequest) {
-        // Stocker les erreurs dans la session pour Inertia
+        // Store errors in session for Inertia
         const errorMessages: Record<string, string> = {}
         Object.entries(error.messages).forEach(([field, message]) => {
           errorMessages[field] = message as string
@@ -64,7 +64,7 @@ export default class HttpExceptionHandler extends ExceptionHandler {
 
         ctx.session.flash('errors', errorMessages)
         ctx.session.flash('notification', {
-          message: 'Veuillez corriger les erreurs dans le formulaire',
+          message: 'Please correct the errors in the form',
           type: 'error',
         })
 
@@ -72,7 +72,7 @@ export default class HttpExceptionHandler extends ExceptionHandler {
       }
     }
 
-    // Essayons aussi avec ValidationError (fallback)
+    // Try also with ValidationError (fallback)
     if (
       error &&
       typeof error === 'object' &&
@@ -85,7 +85,7 @@ export default class HttpExceptionHandler extends ExceptionHandler {
       const validationError = error as any
 
       if (isApiRoute || acceptsJson) {
-        // Transformer les erreurs VineJS dans le format désiré
+        // Transform VineJS errors to desired format
         const formattedErrors = Object.entries(validationError.messages || {}).map(
           ([field, message]) => ({
             field,
@@ -99,7 +99,7 @@ export default class HttpExceptionHandler extends ExceptionHandler {
         })
       }
 
-      // Pour les requêtes Inertia (fallback)
+      // For Inertia requests (fallback)
       if (isInertiaRequest) {
         const errorMessages: Record<string, string> = {}
         Object.entries(validationError.messages || {}).forEach(([field, message]) => {
@@ -108,7 +108,7 @@ export default class HttpExceptionHandler extends ExceptionHandler {
 
         ctx.session.flash('errors', errorMessages)
         ctx.session.flash('notification', {
-          message: 'Veuillez corriger les erreurs dans le formulaire',
+          message: 'Please correct the errors in the form',
           type: 'error',
         })
 

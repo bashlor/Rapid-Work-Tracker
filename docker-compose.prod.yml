@@ -4,6 +4,10 @@ services:
       context: .
       dockerfile: Dockerfile
       target: runner
+      args:
+        - VITE_API_BASE_URL=${PUBLIC_API_BASE_URL}
+        - VITE_APP_DEBUG=${APP_DEBUG:-false}
+        - VITE_NODE_ENV=${NODE_ENV:-production}
     environment:
       TZ: ${TZ}
       PORT: ${PORT}
@@ -17,5 +21,7 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_DATABASE: ${DB_DATABASE}
+      CORS_ENABLED: ${CORS_ENABLED}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
     ports:
       - '${PORT:-3333}:3333'

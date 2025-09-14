@@ -1,13 +1,13 @@
 import { Session, SessionBuilder } from 'domain-rapid-work'
 
 export class SessionMapper {
-  static fromDomain(session: Session): any {
+  static fromDomain(session: Session, userTimezone = 'UTC') {
     return {
       description: session.getDescription().value,
       duration: Math.round(session.getDuration().getSeconds()), // Convert to integer seconds
-      endTime: session.getEndTime().toISOString(),
+      endTime: session.getEndTime().toTimezone(userTimezone).toISOString(),
       id: session.getId().value,
-      startTime: session.getStartTime().toISOString(),
+      startTime: session.getStartTime().toTimezone(userTimezone).toISOString(),
       taskId: session.getTaskId().value,
       userId: session.getUserId().value,
     }
@@ -16,15 +16,23 @@ export class SessionMapper {
   static toDomain(sessionModel: any): null | Session {
     if (!sessionModel) return null
 
-    // Passer directement les chaînes ISO au SessionBuilder
-    // qui se chargera de les convertir en DateTime domain
     return new SessionBuilder()
       .withId(sessionModel.id)
       .withUserId(sessionModel.userId)
       .withTaskId(sessionModel.taskId)
-      .withStartTime(sessionModel.startTime)
-      .withEndTime(sessionModel.endTime || sessionModel.startTime)
-      .withDuration(sessionModel.duration || null)
+      .withStartTime(
+        typeof sessionModel.startTime?.toISO === 'function'
+          ? sessionModel.startTime.toISO()
+          : sessionModel.startTime
+      )
+      .withEndTime(
+        typeof sessionModel.endTime?.toISO === 'function'
+          ? sessionModel.endTime.toISO()
+          : sessionModel.endTime ||
+              (typeof sessionModel.startTime?.toISO === 'function'
+                ? sessionModel.startTime.toISO()
+                : sessionModel.startTime)
+      )
       .withDescription(sessionModel.description || '')
       .build()
   }

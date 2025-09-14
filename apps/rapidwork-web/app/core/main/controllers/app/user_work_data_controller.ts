@@ -20,8 +20,8 @@ export default class UserWorkDataController {
     const tasksViewModel = await getTasksAction.execute(user.id)
 
     return inertia.render('user_work_data', {
-      domains: () => domainsViewModel.publicHttpJsonResponse,
-      tasks: () => tasksViewModel.publicHttpJsonResponse,
+      domains: () => domainsViewModel.publicHttpJsonResponse(),
+      tasks: () => tasksViewModel.publicHttpJsonResponse(),
     })
   }
 }

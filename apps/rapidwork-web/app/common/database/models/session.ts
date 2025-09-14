@@ -17,7 +17,7 @@ export default class Session extends BaseModel {
   declare duration: null | number
 
   @column.dateTime()
-  declare endTime: DateTime | null
+  declare endTime: DateTime
 
   @column({ isPrimary: true })
   declare id: string
