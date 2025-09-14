@@ -25,12 +25,6 @@ export default function Home(props: HomePageProps) {
     currentDate: currentWeek.toISOString(),
   })
 
-  // Debug logging
-  console.log('Home component render - dashboardData:', dashboardData)
-  console.log('Home component render - isLoading:', isLoading)
-  console.log('Home component render - error:', error)
-  console.log('Home component render - weeklyStats:', dashboardData?.weeklyStats)
-
   // Format week display
   const formatWeekRange = () => {
     const start = format(weekBoundaries.weekStart, 'd MMM')
