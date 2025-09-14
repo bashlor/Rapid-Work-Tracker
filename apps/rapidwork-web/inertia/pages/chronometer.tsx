@@ -3,7 +3,7 @@ import TimerView from '../components/time-tracking/TimerView'
 import { useDomainsManagement } from '../hooks/useDomainsManagement'
 import { useTasksManagement } from '../hooks/useTasksManagement'
 import { useSessionsManagement } from '../hooks/useSessionsManagement'
-import type { ApiTask } from '../types/api'
+import { BackendTaskWithRelations } from '@/types'
 
 export default function TimerViewPage() {
   // Utilisation des hooks pour charger les vraies données
@@ -12,10 +12,9 @@ export default function TimerViewPage() {
   const { createSession } = useSessionsManagement(new Date())
 
   // Filtrer les tâches pour n'afficher que celles en cours et en attente
-  const activeTasks = (Array.isArray(tasks) ? tasks : []).filter((task: ApiTask) => 
-    task.status === 'ACTIVE' || task.status === 'PENDING' || 
-    task.status === 'active' || task.status === 'pending' ||
-    task.status === 'in_progress' || task.status === 'IN_PROGRESS'
+  // Seuls les statuts valides du type BackendTaskWithRelations
+  const activeTasks = (Array.isArray(tasks) ? tasks : []).filter((task: BackendTaskWithRelations) => 
+    task.status === 'in_progress' || task.status === 'pending'
   )
 
   const isLoading = domainsLoading || tasksLoading
