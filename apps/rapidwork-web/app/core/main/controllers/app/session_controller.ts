@@ -47,7 +47,7 @@ export default class SessionController {
     const user = auth.getUserOrFail()
 
     const vm = await this.deleteSessionAction.execute({ id: params.id, userId: user.id })
-    return vm.publicHttpJsonResponse
+    return vm.publicHttpJsonResponse()
   }
 
   async getByDate({ auth, request }: HttpContext) {
@@ -89,8 +89,6 @@ export default class SessionController {
     const userTimezone = request.header('X-Timezone') || 'UTC'
     const vm = await this.updateSessionAction.execute(user.id, params.id, data)
 
-    console.log('Updated session VM:', vm)
-
     const dto = vm.publicHttpJsonResponse(userTimezone)
     const body = await validateAndStrip(sessionDtoSchema, dto)
     return { data: body }
@@ -105,6 +103,6 @@ export default class SessionController {
       userId: user.id,
     })
 
-    return vm.publicHttpJsonResponse
+    return vm.publicHttpJsonResponse()
   }
 }
