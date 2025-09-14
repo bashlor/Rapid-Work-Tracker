@@ -45,13 +45,14 @@ export const createSessionValidator = vine.compile(
 )
 
 export const updateSessionValidator = vine.compile(
-  vine.object({
-    description: vine.string().trim().optional(),
-    duration: vine.number().optional(),
-    startTime: vine.string().regex(ISO_WITH_ZONE).optional(),
-    endTime: vine.string().regex(ISO_WITH_ZONE).optional(),
-  })
-  .use(sessionTimeValidator())
+  vine
+    .object({
+      description: vine.string().trim().optional(),
+      duration: vine.number().optional(),
+      endTime: vine.string().regex(ISO_WITH_ZONE).optional(),
+      startTime: vine.string().regex(ISO_WITH_ZONE).optional(),
+    })
+    .use(sessionTimeValidator())
 )
 
 export const getSessionsByDateValidator = vine.compile(
