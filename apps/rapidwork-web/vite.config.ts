@@ -8,9 +8,9 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   define: {
-    VITE_API_BASE_URL: JSON.stringify(process.env.VITE_API_BASE_URL || 'http://localhost:3333'),
-    VITE_APP_DEBUG: JSON.stringify(process.env.VITE_APP_DEBUG || 'true'),
-    VITE_NODE_ENV: JSON.stringify(process.env.VITE_NODE_ENV || 'development'),
+    VITE_API_BASE_URL: JSON.stringify(process.env.VITE_API_BASE_URL),
+    VITE_APP_DEBUG: JSON.stringify(process.env.VITE_APP_DEBUG),
+    VITE_NODE_ENV: JSON.stringify(process.env.VITE_NODE_ENV),
   },
   plugins: [
     inertia({ ssr: { enabled: false } }),

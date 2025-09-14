@@ -27,7 +27,10 @@ export default class AuthMiddleware {
         await ctx.auth.authenticateUsing(options.guards)
       }
     } catch {
-      if (ctx.request.header('accept')?.includes('application/json')) {
+      if (
+        !ctx.request.header('x-inertia') &&
+        ctx.request.header('accept')?.includes('application/json')
+      ) {
         return ctx.response.status(401).json({
           code: 'UNAUTHORIZED',
           error: 'Authentication required',
