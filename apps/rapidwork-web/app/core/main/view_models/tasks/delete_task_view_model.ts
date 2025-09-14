@@ -10,11 +10,7 @@ interface DeleteTaskOutput {
   success: boolean
 }
 
-export class DeleteTaskViewModel extends ViewModelActionResponse<
-  DeleteTaskInput,
-  boolean,
-  DeleteTaskOutput
-> {
+export class DeleteTaskViewModel extends ViewModelActionResponse<DeleteTaskInput, boolean> {
   publicHttpJsonResponse(): DeleteTaskOutput {
     return {
       message: this.entities ? 'Task deleted successfully' : 'Failed to delete task',

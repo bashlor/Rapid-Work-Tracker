@@ -17,11 +17,7 @@ interface GetTasksInput {
 }
 
 @inject()
-export class GetTasksViewModel extends ViewModelActionResponse<
-  GetTasksInput,
-  TaskEntity[],
-  TaskWithRelationsDto[]
-> {
+export class GetTasksViewModel extends ViewModelActionResponse<GetTasksInput, TaskEntity[]> {
   private domains: Map<string, DomainEntity> = new Map()
 
   private subdomains: Map<string, SubDomainEntity> = new Map()

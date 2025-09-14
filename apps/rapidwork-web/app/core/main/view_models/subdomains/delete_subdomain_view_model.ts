@@ -12,8 +12,7 @@ interface DeleteSubdomainOutput {
 
 export class DeleteSubdomainViewModel extends ViewModelActionResponse<
   DeleteSubdomainInput,
-  boolean,
-  DeleteSubdomainOutput
+  boolean
 > {
   publicHttpJsonResponse(): DeleteSubdomainOutput {
     return {

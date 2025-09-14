@@ -1,9 +1,6 @@
 import type { Domain as DomainEntity } from 'domain-rapid-work'
 
 import { ViewModelActionResponse } from '#view_models/base/view_model_action_response'
-
-import { DomainWithSubdomainsDto } from '../../../../dtos/domain_dto.js'
-
 interface CreateDomainInput {
   name: string
   userId: string
@@ -11,10 +8,9 @@ interface CreateDomainInput {
 
 export class CreateDomainViewModel extends ViewModelActionResponse<
   CreateDomainInput,
-  DomainEntity,
-  DomainWithSubdomainsDto
+  DomainEntity
 > {
-  publicHttpJsonResponse(): DomainWithSubdomainsDto {
+  publicHttpJsonResponse() {
     return {
       createdAt: this.entities.createdAt.toISOString(),
       id: this.entities.id.value,

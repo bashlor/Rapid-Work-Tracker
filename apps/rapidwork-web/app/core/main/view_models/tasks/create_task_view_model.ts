@@ -22,11 +22,7 @@ interface CreateTaskInput {
 }
 
 @inject()
-export class CreateTaskViewModel extends ViewModelActionResponse<
-  CreateTaskInput,
-  TaskEntity,
-  TaskWithRelationsDto
-> {
+export class CreateTaskViewModel extends ViewModelActionResponse<CreateTaskInput, TaskEntity> {
   private domain: DomainEntity | null = null
 
   private subdomain: null | SubDomainEntity = null

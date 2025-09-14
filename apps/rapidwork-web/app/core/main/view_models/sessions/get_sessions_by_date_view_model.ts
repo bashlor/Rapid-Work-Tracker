@@ -2,7 +2,6 @@ import type { Session as SessionEntity } from 'domain-rapid-work'
 
 import { ViewModelActionResponse } from '#view_models/base/view_model_action_response'
 
-import { SessionHttpDto } from '../../../../dtos/session_dto.js'
 import { SessionMapper } from '../../mappers/session_mapper.js'
 
 interface GetSessionsByDateInput {
@@ -12,10 +11,9 @@ interface GetSessionsByDateInput {
 
 export class GetSessionsByDateViewModel extends ViewModelActionResponse<
   GetSessionsByDateInput,
-  SessionEntity[],
-  SessionHttpDto[]
+  SessionEntity[]
 > {
-  publicHttpJsonResponse(timezone: string): SessionHttpDto[] {
+  publicHttpJsonResponse(timezone: string) {
     return this.entities.map((s) => SessionMapper.fromDomain(s, timezone))
   }
 }

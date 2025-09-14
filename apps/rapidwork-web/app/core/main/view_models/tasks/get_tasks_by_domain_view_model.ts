@@ -20,8 +20,7 @@ interface GetTasksByDomainInput {
 @inject()
 export class GetTasksByDomainViewModel extends ViewModelActionResponse<
   GetTasksByDomainInput,
-  TaskEntity[],
-  TaskWithRelationsDto[]
+  TaskEntity[]
 > {
   private domains: Map<string, DomainEntity> = new Map()
 
