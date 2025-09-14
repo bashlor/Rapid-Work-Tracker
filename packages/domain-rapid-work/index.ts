@@ -34,4 +34,12 @@ export { DeleteTaskFeature } from "./core/rapid-work/features/task/DeleteTaskFea
 export { GetTasksFeature } from "./core/rapid-work/features/task/GetTasksFeature";
 export { UpdateTaskFeature } from "./core/rapid-work/features/task/UpdateTaskFeature";
 export { UserDataDashboardWeekReport } from "./core/rapid-work/value-objects/UserDataDashboardWeekReport";
+
 export * from "./error";
+// Collections mocks
+export { MockDomainCollection } from "./tests/mocks/MockDomainCollection";
+export { MockSessionCollection } from "./tests/mocks/MockSessionCollection";
+export { MockSubDomainCollection } from "./tests/mocks/MockSubDomainCollection";
+export { MockTaskCollection } from "./tests/mocks/MockTaskCollection";
+
+export { MockUserCollection } from "./tests/mocks/MockUserCollection";
