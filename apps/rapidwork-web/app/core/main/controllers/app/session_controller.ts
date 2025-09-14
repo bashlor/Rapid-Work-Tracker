@@ -103,6 +103,6 @@ export default class SessionController {
       userId: user.id,
     })
 
-    return vm.publicHttpJsonResponse()
+    return vm.publicHttpJsonResponse
   }
 }
