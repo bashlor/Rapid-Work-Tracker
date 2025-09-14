@@ -7,7 +7,7 @@ import { tuyau } from '@/tuyau'
 // Utilisation des types générés par Tuyau
 type LoginCredentials = Parameters<typeof tuyau.auth.login.$post>[0]
 type LoginResponse = Awaited<ReturnType<typeof tuyau.auth.login.$post>>
-type LogoutResponse = Awaited<ReturnType<typeof tuyau.auth.logout.$post>>
+type LogoutResponse = Awaited<ReturnType<typeof tuyau.logout.$post>>
 
 // Type pour les erreurs de validation
 interface ValidationError {
@@ -49,7 +49,7 @@ export function useAuth() {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      return await tuyau.auth.logout.$post()
+      return await tuyau.logout.$post()
     },
     onError: (error: any) => {
       showNotification('error', 'Erreur lors de la déconnexion')
