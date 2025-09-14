@@ -1,3 +1,4 @@
+import React from 'react'
 import { Head } from '@inertiajs/react'
 import { format, formatDurationFromMinutes } from '@/utils/datetime'
 import { ChevronLeft, ChevronRight, Calendar, Clock, CheckCircle, Activity } from 'lucide-react'
@@ -5,10 +6,17 @@ import { useGetUserDataDashboard, useWeekNavigation } from '../hooks/useGetUserD
 import WeeklyCalendarView from '../components/time-tracking/WeeklyCalendarView'
 import ErrorBoundary from '../components/ErrorBoundary'
 import type { HomePageProps } from '../types/page_props'
+import environment from '@/config/environment'
+
+
+
+const DashboardDebug = environment.APP_ENV === 'development'
+  ? React.lazy(() => import('../components/time-tracking/DashboardDebug'))
+  : () => null
+
 
 export default function Home(props: HomePageProps) {
   const { user, flash } = props
-  const isDevelopment = import.meta.env.DEV
 
   // Week navigation
   const {
@@ -309,26 +317,11 @@ export default function Home(props: HomePageProps) {
             </div>
           </div>
         )}
-
         {/* Debug Info - Only in Development */}
-        {isDevelopment && dashboardData && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <h3 className="text-lg font-semibold mb-2">Debug - Données du dashboard</h3>
-            <div className="space-y-2 text-sm">
-              <div>
-                <strong>Utilisateur:</strong> {dashboardData.userName} (ID: {dashboardData.userId})
-              </div>
-              <div>
-                <strong>Période:</strong> {format(new Date(dashboardData.weekStartDate), 'dd/MM/yyyy')} - {format(new Date(dashboardData.weekEndDate), 'dd/MM/yyyy')}
-              </div>
-              <div>
-                <strong>Stats semaine:</strong> {JSON.stringify(dashboardData.weeklyStats || {})}
-              </div>
-              <div>
-                <strong>Sessions par jour:</strong> {dashboardData.dailySessions.map((d: any) => `${d.date}: ${d.sessions.length} sessions`).join(', ')}
-              </div>
-            </div>
-          </div>
+        {environment.APP_ENV === 'development' && dashboardData && (
+          <React.Suspense fallback={null}>
+            <DashboardDebug dashboardData={dashboardData} />
+          </React.Suspense>
         )}
       </div>
     </>

@@ -1,28 +1,38 @@
+import environment from '@/config/environment'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtoolsPanel } from '@tanstack/react-query-devtools'
-import React, { useState } from 'react'
+import React, { useState, Suspense } from 'react'
+
+console.log(environment)
+
+// Lazy load DevtoolsPanel only in development
+const DevtoolsPanel = environment.APP_ENV === 'development'
+  ? React.lazy(() =>
+      import('@tanstack/react-query-devtools').then(m => ({
+        default: m.ReactQueryDevtoolsPanel,
+      })),
+    )
+  : () => null // Empty component if not in dev
 
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
       retry: (failureCount, error) => {
-        // Ne pas retry sur les erreurs 4xx (client errors)
         if (error instanceof Error && 'status' in error) {
           const status = (error as any).status
           if (status >= 400 && status < 500) {
             return false
           }
         }
-        // Retry jusqu'à 3 fois pour les autres erreurs
         return failureCount < 3
       },
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+      retryDelay: (attemptIndex) =>
+        Math.min(1000 * 2 ** attemptIndex, 30000),
     },
     mutations: {
-      retry: 1, // Retry les mutations une seule fois
+      retry: 1,
       retryDelay: 1000,
     },
   },
@@ -38,8 +48,15 @@ export function ReactQueryProvider({ children }: ReactQueryProviderProps) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      {process.env.NODE_ENV === 'development' && (
-        <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 9999 }}>
+      {environment.APP_ENV === 'development' && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '20px',
+            right: '20px',
+            zIndex: 9999,
+          }}
+        >
           <button
             onClick={() => setIsDevtoolsOpen(!isDevtoolsOpen)}
             style={{
@@ -69,7 +86,9 @@ export function ReactQueryProvider({ children }: ReactQueryProviderProps) {
                 boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
               }}
             >
-              <ReactQueryDevtoolsPanel onClose={() => setIsDevtoolsOpen(false)} />
+              <Suspense fallback={<div>Loading Devtools…</div>}>
+                <DevtoolsPanel onClose={() => setIsDevtoolsOpen(false)} />
+              </Suspense>
             </div>
           )}
         </div>
