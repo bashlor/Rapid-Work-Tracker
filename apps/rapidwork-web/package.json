@@ -57,7 +57,6 @@
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^4.7.0",
-    "api-client:latest": "link:@japa/api-client:latest",
     "eslint": "^9.35.0",
     "eslint-plugin-perfectionist": "^4.15.0",
     "hot-hook": "^0.4.0",
