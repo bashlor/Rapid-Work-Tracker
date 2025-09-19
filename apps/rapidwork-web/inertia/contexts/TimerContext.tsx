@@ -1,8 +1,20 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react'
-import { TimerEntry, timerService } from '@/lib/mock_data'
 import { DateTime } from 'luxon'
 
 type TimerStatus = 'idle' | 'running' | 'paused'
+
+// Interface locale pour les entrées de timer (indépendante des mocks)
+export interface TimerEntry {
+  id: string
+  userId: string
+  taskId: string
+  date: string // Format: 'yyyy-MM-dd'
+  startTime: string // ISO string
+  endTime: string // ISO string
+  domain: string
+  subdomain: string
+  description: string
+}
 
 interface TimerState {
   status: TimerStatus
@@ -105,6 +117,30 @@ interface TimerContextType {
 const TimerContext = createContext<TimerContextType | null>(null)
 
 const STORAGE_KEY = 'timerState'
+const TIMER_ENTRIES_KEY = 'timerEntries'
+
+// Service simple pour sauvegarder les entrées de timer
+const saveTimerEntry = async (entry: TimerEntry): Promise<void> => {
+  try {
+    const existingEntries = JSON.parse(localStorage.getItem(TIMER_ENTRIES_KEY) || '[]')
+    const updatedEntries = [...existingEntries, entry]
+    localStorage.setItem(TIMER_ENTRIES_KEY, JSON.stringify(updatedEntries))
+    console.log('Timer entry saved:', entry)
+  } catch (error) {
+    console.error('Failed to save timer entry to localStorage:', error)
+    throw error
+  }
+}
+
+// Fonction utilitaire pour récupérer les entrées sauvegardées
+export const getTimerEntries = (): TimerEntry[] => {
+  try {
+    return JSON.parse(localStorage.getItem(TIMER_ENTRIES_KEY) || '[]')
+  } catch (error) {
+    console.error('Failed to load timer entries from localStorage:', error)
+    return []
+  }
+}
 
 export function TimerProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(timerReducer, initialState)
@@ -209,7 +245,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
-        await timerService.addEntry(entry)
+        await saveTimerEntry(entry)
       } catch (error) {
         console.error('Failed to save timer entry:', error)
       }
