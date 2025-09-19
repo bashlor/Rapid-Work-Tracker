@@ -6,10 +6,10 @@
 
 import { Duration, DateTime as Lx } from 'luxon'
 
-export const DEFAULT_LOCALE = 'fr-FR'
-// Set to a specific IANA TZ like 'Europe/Paris' to force display in that zone,
-// or leave undefined to use the user's local timezone.
-export const DEFAULT_TIME_ZONE: string | undefined = 'Europe/Paris'
+import { LOCALE_CONFIG } from '@/lib/locale_config'
+
+export const DEFAULT_LOCALE = LOCALE_CONFIG.locale
+export const DEFAULT_TIME_ZONE: string | undefined = LOCALE_CONFIG.timeZone
 
 // =============================================================================
 // CALENDAR & DATE UTILITIES (remplace date-fns)
@@ -96,6 +96,15 @@ export function format(
   return dt.setLocale('fr').toFormat(luxonFormat)
 }
 
+// Remplace toLocaleDateString() avec un formatage français cohérent
+export function formatDateFr(date: Date | string): string {
+  return formatDateTimeDisplay(date, {
+    format: LOCALE_CONFIG.dateFormats.short,
+    locale: DEFAULT_LOCALE,
+    timeZone: DEFAULT_TIME_ZONE,
+  })
+}
+
 // Format a Date or date-like input to a readable string using Intl
 export function formatDateTimeDisplay(
   value: Date | string,
@@ -110,6 +119,24 @@ export function formatDateTimeDisplay(
       : Lx.fromJSDate(value).setZone(zone || 'local')
   if (!dt.isValid) return String(value)
   return dt.setLocale(locale).toFormat(fmt)
+}
+
+// Remplace toLocaleString() avec un formatage français complet
+export function formatDateTimeFr(date: Date | string): string {
+  return formatDateTimeDisplay(date, {
+    format: LOCALE_CONFIG.dateFormats.dateTime,
+    locale: DEFAULT_LOCALE,
+    timeZone: DEFAULT_TIME_ZONE,
+  })
+}
+
+// Format long avec jour de la semaine pour les détails
+export function formatDateTimeLongFr(date: Date | string): string {
+  return formatDateTimeDisplay(date, {
+    format: LOCALE_CONFIG.dateFormats.dateTimeLong,
+    locale: DEFAULT_LOCALE,
+    timeZone: DEFAULT_TIME_ZONE,
+  })
 }
 
 export function formatDuration(milliseconds: number): string {
@@ -160,11 +187,23 @@ export function formatDurationFromSeconds(seconds: number): string {
   return `${hours}h${minutes}min`
 }
 
+// =============================================================================
+// ORIGINAL DATETIME UTILITIES (preservées)
+// =============================================================================
+
 export function formatTimeDisplay(
   value: Date | string,
   opts?: { format?: string; locale?: string; timeZone?: string }
 ): string {
   return formatDateTimeDisplay(value, { ...opts, format: opts?.format || 'HH:mm' })
+}
+
+// Remplace toLocaleTimeString() avec un formatage français 24h
+export function formatTimeFr(date: Date | string): string {
+  return formatTimeDisplay(date, {
+    locale: DEFAULT_LOCALE,
+    timeZone: DEFAULT_TIME_ZONE,
+  })
 }
 
 export function formatTimeRange(
@@ -182,10 +221,6 @@ export function isEndAfterStartLocal(startLocal?: string, endLocal?: string): bo
   const diff = diffMinutesBetweenLocalInputs(startLocal, endLocal)
   return Number.isFinite(diff) && diff > 0
 }
-
-// =============================================================================
-// ORIGINAL DATETIME UTILITIES (preservées)
-// =============================================================================
 
 export function isSameDay(date1: Date | string, date2: Date | string): boolean {
   const dt1 = typeof date1 === 'string' ? Lx.fromISO(date1) : Lx.fromJSDate(date1)
@@ -234,6 +269,10 @@ export function parseISO(dateString: string): Date {
   const dt = Lx.fromISO(dateString)
   return dt.toJSDate()
 }
+
+// =============================================================================
+// FONCTIONS UTILITAIRES POUR REMPLACER toLocaleString() ET SIMILAIRES
+// =============================================================================
 
 export function parseTimeToMinutes(time: string): number {
   // Format HH:mm
