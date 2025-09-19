@@ -79,7 +79,7 @@ const WeeklyCalendar = ({ currentDate, tasks, onTaskClick, onCellClick }: Weekly
           {hoursArray.map((hour) => (
             <div key={hour} className="h-[60px] text-right pr-2 text-xs text-gray-500 font-medium relative">
               <span className="absolute top-[-9px] right-2">
-                {hour === 12 ? '12:00 PM' : hour < 12 ? `${hour}:00 AM` : `${hour-12}:00 PM`}
+                {hour.toString().padStart(2, '0')}:00
               </span>
             </div>
           ))}

@@ -5,6 +5,7 @@ import {
   getDomainColor,
   getStatusColor,
 } from '@/utils/calendar_utils'
+import { formatDateTimeDisplay } from '@/utils/datetime'
 
 interface SessionDetailPanelProps {
   task: CalendarTask | null
@@ -48,13 +49,10 @@ const SessionDetailPanel = ({ task, isOpen, onClose }: SessionDetailPanelProps) 
 
   const formatDateTime = (dateString: string) => {
     try {
-      return new Date(dateString).toLocaleDateString('fr-FR', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+      return formatDateTimeDisplay(dateString, {
+        format: 'cccc dd LLLL yyyy, HH:mm',
+        locale: 'fr-FR',
+        timeZone: 'Europe/Paris'
       })
     } catch {
       return dateString
