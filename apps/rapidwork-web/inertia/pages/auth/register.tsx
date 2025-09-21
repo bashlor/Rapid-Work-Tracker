@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Link } from '@tuyau/inertia/react'
 import { Head } from '@inertiajs/react'
 import { Button } from '@/components/ui/button'
@@ -11,7 +11,7 @@ import { useFormQuery } from '@/hooks/useFormQuery'
 import { tuyau } from '@/tuyau'
 
 export default function Register(props: RegisterPageProps) {
-  const { flash } = props
+  const { flash, errors, old } = props
 
   const { data, setData, post, processing, formattedErrors, reset } = useFormQuery(
     {
@@ -30,12 +30,14 @@ export default function Register(props: RegisterPageProps) {
       skipRetryOnValidationErrors: true,
       // Mapping des labels pour les messages d'erreur
       fieldLabels: {
-        full_name: 'Nom complet',
-        email: 'Email',
-        password: 'Mot de passe',
-        password_confirmation: 'Confirmation du mot de passe',
+        full_name: 'Full name',
+        email: 'Email address',
+        password: 'Password',
+        password_confirmation: 'Password confirmation',
       },
-    }
+    },
+    errors,
+    old
   )
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -64,92 +66,94 @@ export default function Register(props: RegisterPageProps) {
           <Card className="border-0 shadow-xl">
             <CardHeader className="text-center">
               <CardTitle className="text-2xl font-bold">Créer un compte</CardTitle>
-              <CardDescription>Rejoignez RapidWorkTracker pour optimiser votre temps</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* Flash messages */}
-            {flash?.error && (
-              <Alert variant="destructive" className="mb-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{flash.error}</AlertDescription>
-              </Alert>
-            )}
-            {flash?.success && (
-              <Alert className="mb-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{flash.success}</AlertDescription>
-              </Alert>
-            )}
+              <CardDescription>
+                Rejoignez RapidWorkTracker pour optimiser votre temps
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Flash messages */}
+              {flash?.error && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{flash.error}</AlertDescription>
+                </Alert>
+              )}
+              {flash?.success && (
+                <Alert className="mb-4">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{flash.success}</AlertDescription>
+                </Alert>
+              )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <FormInput
-                label="Nom complet"
-                type="text"
-                value={data.full_name}
-                onChange={(value) => setData('full_name', String(value))}
-                placeholder="Votre nom complet"
-                error={formattedErrors.full_name}
-                icon={<User className="h-4 w-4" />}
-                required
-              />
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <FormInput
+                  label="Nom complet"
+                  type="text"
+                  value={data.full_name}
+                  onChange={(value) => setData('full_name', String(value))}
+                  placeholder="Votre nom complet"
+                  error={formattedErrors.full_name}
+                  icon={<User className="h-4 w-4" />}
+                  required
+                />
 
-              <FormInput
-                label="Email"
-                type="email"
-                value={data.email}
-                onChange={(value) => setData('email', String(value))}
-                placeholder="votre@email.com"
-                error={formattedErrors.email}
-                icon={<Mail className="h-4 w-4" />}
-                required
-              />
+                <FormInput
+                  label="Email"
+                  type="email"
+                  value={data.email}
+                  onChange={(value) => setData('email', String(value))}
+                  placeholder="votre@email.com"
+                  error={formattedErrors.email}
+                  icon={<Mail className="h-4 w-4" />}
+                  required
+                />
 
-              <FormInput
-                label="Mot de passe"
-                type="password"
-                value={data.password}
-                onChange={(value) => setData('password', String(value))}
-                placeholder="Créez un mot de passe sécurisé"
-                error={formattedErrors.password}
-                icon={<Lock className="h-4 w-4" />}
-                required
-              />
+                <FormInput
+                  label="Mot de passe"
+                  type="password"
+                  value={data.password}
+                  onChange={(value) => setData('password', String(value))}
+                  placeholder="Créez un mot de passe sécurisé"
+                  error={formattedErrors.password}
+                  icon={<Lock className="h-4 w-4" />}
+                  required
+                />
 
-              <FormInput
-                label="Confirmer le mot de passe"
-                type="password"
-                value={data.password_confirmation}
-                onChange={(value) => setData('password_confirmation', String(value))}
-                placeholder="Confirmez votre mot de passe"
-                error={formattedErrors.password_confirmation}
-                icon={<Lock className="h-4 w-4" />}
-                required
-              />
+                <FormInput
+                  label="Confirmer le mot de passe"
+                  type="password"
+                  value={data.password_confirmation}
+                  onChange={(value) => setData('password_confirmation', String(value))}
+                  placeholder="Confirmez votre mot de passe"
+                  error={formattedErrors.password_confirmation}
+                  icon={<Lock className="h-4 w-4" />}
+                  required
+                />
 
-              <Button
-                type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700"
-                disabled={processing}
-              >
-                {processing ? 'Création du compte...' : 'Créer mon compte'}
-              </Button>
-            </form>
-
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
-                Déjà un compte ?{' '}
-                <Link
-                  route={'login.show'}
-                  className="text-blue-600 hover:text-blue-700 font-medium"
+                <Button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  disabled={processing}
                 >
-                  Se connecter
-                </Link>
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+                  {processing ? 'Création du compte...' : 'Créer mon compte'}
+                </Button>
+              </form>
+
+              <div className="mt-6 text-center">
+                <p className="text-sm text-gray-600">
+                  Déjà un compte ?{' '}
+                  <Link
+                    route={'login.show'}
+                    className="text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    Se connecter
+                  </Link>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
     </>
   )
 }

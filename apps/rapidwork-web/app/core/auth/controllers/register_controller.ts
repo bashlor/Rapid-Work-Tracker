@@ -1,6 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 
 import { inject } from '@adonisjs/core'
+import logger from '@adonisjs/core/services/logger'
 
 import { validateAndStrip } from '../../main/validators/http_responses/common.js'
 import { LoginAction } from '../actions/login_action.js'
@@ -70,47 +71,36 @@ export default class RegisterController {
   async store(httpContext: HttpContext) {
     const { inertia, request } = httpContext
 
-    try {
-      const data = await request.validateUsing(registerValidator)
-      const result = await this.registerAction.execute(data)
+    const data = await request.validateUsing(registerValidator)
+    const result = await this.registerAction.execute(data)
 
-      if (!result.success) {
-        return inertia.render('auth/register', {
-          errors: {
-            general: result.error || 'Registration failed',
-          },
-          flash: {
-            error: result.error || 'Registration failed',
-          },
-        })
-      }
-
-      // Automatically log in the user after registration
-      const loginResult = await this.loginAction.execute(httpContext, {
-        email: data.email,
-        password: data.password,
-      })
-
-      if (!loginResult.success) {
-        // Registration succeeded but login failed - redirect to login
-        return inertia.render('auth/login', {
-          flash: {
-            success: 'Account created successfully! Please log in.',
-          },
-        })
-      }
-
-      // Registration and login both succeeded - redirect to home
-      return inertia.location('/app/home')
-    } catch (error) {
+    if (!result.success) {
       return inertia.render('auth/register', {
         errors: {
-          general: 'An unexpected error occurred. Please try again.',
+          general: result.error || 'Registration failed',
         },
         flash: {
-          error: 'An unexpected error occurred. Please try again.',
+          error: result.error || 'Registration failed',
         },
       })
     }
+
+    // Automatically log in the user after registration
+    const loginResult = await this.loginAction.execute(httpContext, {
+      email: data.email,
+      password: data.password,
+    })
+
+    if (!loginResult.success) {
+      // Registration succeeded but login failed - redirect to login
+      return inertia.render('auth/login', {
+        flash: {
+          success: 'Account created successfully! Please log in.',
+        },
+      })
+    }
+
+    // Registration and login both succeeded - redirect to home
+    return inertia.location('/app/home')
   }
 }
