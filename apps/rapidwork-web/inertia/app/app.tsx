@@ -1,23 +1,44 @@
 /// <reference path="../../adonisrc.ts" />
-/// <reference path="../../app/common/config/inertia.ts" />
+/// <reference path="../../config/inertia.ts" />
 
 import '../css/app.css'
-import { createRoot } from 'react-dom/client'
-import { createInertiaApp } from '@inertiajs/react'
 import { resolvePageComponent } from '@adonisjs/inertia/helpers'
-import Layout from '../components/layout/Layout'
+import { createInertiaApp } from '@inertiajs/react'
 import { TuyauProvider } from '@tuyau/inertia/react'
-import { ReactQueryProvider } from '@/contexts/ReactQueryProvider'
+import i18n from 'i18next'
+import Fetch from 'i18next-fetch-backend'
+import ICU from 'i18next-icu'
+import { createRoot } from 'react-dom/client'
+import { I18nextProvider, initReactI18next } from 'react-i18next'
+
 import { Toaster } from '@/components/ui/toaster'
+import { ReactQueryProvider } from '@/contexts/ReactQueryProvider'
 import { tuyau } from '@/tuyau'
 
-const appName = import.meta.env.VITE_APP_NAME
+import Layout from '../components/layout/Layout'
+
+const appName = import.meta.env.VITE_APP_NAME || 'Rapid Work Tracker'
 const pageNameWithoutLayout = ['landing', 'login', 'register']
+
+i18n
+  .use(Fetch)
+  .use(ICU)
+  .use(initReactI18next)
+  .init({
+    backend: {
+      loadPath: '../../resources/lang/{{lng}}/{{ns}}.json',
+    },
+    defaultNS: 'messages',
+    fallbackLng: 'en',
+    interpolation: {
+      escapeValue: false,
+    },
+    lng: 'en',
+    ns: ['messages'],
+  })
 
 createInertiaApp({
   progress: { color: '#5468FF' },
-
-  title: (title) => `${title} - ${appName}`,
 
   resolve: (name) => {
     const page = resolvePageComponent(`../pages/${name}.tsx`, import.meta.glob('../pages/**/*.tsx'))
@@ -31,16 +52,20 @@ createInertiaApp({
     return page
   },
 
-  setup({ el, App, props }) {
+  setup({ App, el, props }) {
     createRoot(el).render(
       <>
-        <ReactQueryProvider>
-          <TuyauProvider client={tuyau}>
-            <App {...props} />
-            <Toaster />
-          </TuyauProvider>
-        </ReactQueryProvider>
+        <I18nextProvider defaultNS={'messages'} i18n={i18n}>
+          <ReactQueryProvider>
+            <TuyauProvider client={tuyau}>
+              <App {...props} />
+              <Toaster />
+            </TuyauProvider>
+          </ReactQueryProvider>
+        </I18nextProvider>
       </>
     )
   },
+
+  title: (title) => `${title} - ${appName}`,
 })

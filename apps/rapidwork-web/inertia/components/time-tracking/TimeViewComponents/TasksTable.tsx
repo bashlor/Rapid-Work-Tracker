@@ -1,11 +1,11 @@
 import React from 'react'
 
 interface TaskItem {
-  id: string
-  time: string
-  name: string
   domain: string
+  id: string
+  name: string
   subdomain: string
+  time: string
 }
 
 interface TasksTableProps {

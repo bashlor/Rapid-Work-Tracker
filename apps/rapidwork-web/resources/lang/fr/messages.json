@@ -1,0 +1,32 @@
+{
+  "greetings": "Bonjour, monde !",
+  "welcome_message": "Bienvenue dans Rapid Work Tracker",
+  "dashboard": "Tableau de bord",
+  "tasks": "Tâches",
+  "sessions": "Sessions",
+  "home": {
+    "welcome": "Bonjour {name} ! 👋",
+    "week_range": "Voici votre tableau de bord pour la semaine du {range}",
+    "previous_week": "Semaine précédente",
+    "next_week": "Semaine suivante",
+    "current_week": "Semaine actuelle",
+    "go_to_current_week": "Aller à la semaine actuelle",
+    "stats": {
+      "total_time": "Temps total (semaine)",
+      "sessions_count": "Sessions (semaine)",
+      "active_tasks": "Tâches en cours",
+      "completed_tasks": "Tâches terminées"
+    },
+    "calendar": {
+      "title": "Calendrier hebdomadaire - Sessions de travail",
+      "description": "Visualisez vos sessions de travail pour la semaine sélectionnée",
+      "short_sessions_info": "Les sessions de moins de 15 minutes ne sont pas affichées dans le calendrier"
+    },
+    "recent_sessions": "Sessions récentes",
+    "session_without_description": "Session sans description",
+    "work_session": "Session de travail",
+    "loading_error": "Erreur lors du chargement des données",
+    "task_without_name": "Tâche sans nom",
+    "user": "Utilisateur"
+  }
+}

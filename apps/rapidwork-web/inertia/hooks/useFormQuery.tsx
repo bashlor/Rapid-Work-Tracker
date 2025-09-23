@@ -1,125 +1,103 @@
-import { useForm, type InertiaFormProps } from '@inertiajs/react'
+/* eslint-disable @tanstack/query/mutation-property-order */
+import { type InertiaFormProps, useForm } from '@inertiajs/react'
 import { useMutation, UseMutationOptions } from '@tanstack/react-query'
-import { useRef, useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import * as React from 'react'
+
 import { useNotification } from './useNotification'
 
-// Types simplifiés pour éviter les conflits d'import
-type FormDataConvertible = string | number | boolean | File | Date | null | undefined
-type FormDataType = Record<string, FormDataConvertible>
-
-// Fonction utilitaire pour formatter les messages d'erreur
-function formatErrorMessage(
-  fieldName: string,
-  message: string,
-  fieldLabels?: Record<string, string>
-): string {
-  const label = fieldLabels?.[fieldName]
-  if (label) {
-    // Remplace le nom du champ par le label dans le message
-    const regex = new RegExp(`\\b${fieldName}\\b`, 'gi')
-    return message.replace(regex, label)
-  }
-
-  // Si pas de label personnalisé, convertit camelCase en format lisible
-  const readableFieldName = fieldName
-    .replace(/([A-Z])/g, ' $1') // Ajoute un espace avant les majuscules
-    .replace(/^./, (str) => str.toUpperCase()) // Met la première lettre en majuscule
-    .trim()
-
-  const regex = new RegExp(`\\b${fieldName}\\b`, 'gi')
-  return message.replace(regex, readableFieldName)
-}
-
-interface VisitOptions {
-  method?: 'get' | 'post' | 'put' | 'patch' | 'delete'
-  data?: Record<string, FormDataConvertible>
-  replace?: boolean
-  preserveScroll?: boolean
-  preserveState?: boolean
-  only?: string[]
-  except?: string[]
-  headers?: Record<string, string>
-  errorBag?: string
-  forceFormData?: boolean
-  queryStringArrayFormat?: 'brackets' | 'indices'
-  onBefore?: () => void | boolean
-  onStart?: (visit: any) => void
-  onProgress?: (progress: any) => void
-  onFinish?: (visit: any) => void
-  onCancel?: () => void
-  onSuccess?: (page: any) => void
-  onError?: (errors: any) => void
-}
-
-export interface UseFormQueryOptions
-  extends Omit<
-    UseMutationOptions<any, any, { url: string; options?: VisitOptions }, any>,
-    'mutationFn'
-  > {
-  /** Nombre de retry personnalisé (par défaut: 3) */
-  retry?: number | boolean | ((failureCount: number, error: any) => boolean)
-  /** Délai entre les retry (par défaut: exponentiel backoff) */
-  retryDelay?: number | ((retryAttempt: number, error: any) => number)
-  /** Callback appelé avant chaque tentative */
-  onRetry?: (failureCount: number, error: any) => void
-  /** Désactive le retry sur les erreurs de validation (par défaut: true) */
-  skipRetryOnValidationErrors?: boolean
-  /** Affiche automatiquement les notifications de succès/erreur (par défaut: true) */
-  showNotifications?: boolean
-  /** Messages de notification personnalisés */
-  notifications?: {
-    success?: string
-    error?: string
-    retry?: string
-  }
-  /** Mapping des noms de champs vers leurs labels pour les messages d'erreur */
-  fieldLabels?: Record<string, string>
-}
-
-export interface FormQueryHelpers<TData extends FormDataType = FormDataType> {
+// Constraindre le type générique pour éviter la récursion infinie
+export interface FormQueryHelpers<TData extends Record<string, any> = Record<string, any>> {
+  cancel: () => void
+  // Propriétés React Query
+  canRetry: boolean
+  clearErrors: (...fields: (keyof TData)[]) => void
   // Propriétés du form Inertia
   data: TData
-  isDirty: boolean
+  delete: (url: string, options?: VisitOptions) => void
+  error: any
   errors: Partial<Record<keyof TData, string>>
+  failureCount: number
   formattedErrors: Partial<Record<keyof TData, string>>
+  get: (url: string, options?: VisitOptions) => void
   hasErrors: boolean
-  processing: boolean
-  progress: any
-  wasSuccessful: boolean
-  recentlySuccessful: boolean
-  setData: InertiaFormProps<TData>['setData']
-  transform: (callback: (data: TData) => TData) => void
-  setDefaults: InertiaFormProps<TData>['setDefaults']
-  reset: (...fields: (keyof TData)[]) => void
-  clearErrors: (...fields: (keyof TData)[]) => void
-  resetAndClearErrors: (...fields: (keyof TData)[]) => void
-  setError: InertiaFormProps<TData>['setError']
-  cancel: () => void
+  isDirty: boolean
+  isError: boolean
+  isIdle: boolean
+  isPending: boolean
+  isSuccess: boolean
+  patch: (url: string, options?: VisitOptions) => void
 
   // Méthodes HTTP avec retry
   post: (url: string, options?: VisitOptions) => void
+  processing: boolean
+  progress: any
   put: (url: string, options?: VisitOptions) => void
-  patch: (url: string, options?: VisitOptions) => void
-  delete: (url: string, options?: VisitOptions) => void
-  get: (url: string, options?: VisitOptions) => void
+  recentlySuccessful: boolean
+  reset: (...fields: (keyof TData)[]) => void
+
+  resetAndClearErrors: (...fields: (keyof TData)[]) => void
+  resetMutation: () => void
+  retry: () => void
+  setData: InertiaFormProps<TData>['setData']
+  setDefaults: InertiaFormProps<TData>['setDefaults']
+  setError: InertiaFormProps<TData>['setError']
+  status: 'error' | 'idle' | 'pending' | 'success'
   submit: (
-    method: 'get' | 'post' | 'put' | 'patch' | 'delete',
+    method: 'delete' | 'get' | 'patch' | 'post' | 'put',
     url: string,
     options?: VisitOptions
   ) => void
+  transform: (callback: (data: TData) => TData) => void
+  wasSuccessful: boolean
+}
+export interface UseFormQueryOptions
+  extends Omit<
+    UseMutationOptions<any, any, { options?: VisitOptions; url: string }, any>,
+    'mutationFn'
+  > {
+  /** Mapping des noms de champs vers leurs labels pour les messages d'erreur */
+  fieldLabels?: Record<string, string>
+  /** Messages de notification personnalisés */
+  notifications?: {
+    error?: string
+    retry?: string
+    success?: string
+  }
+  /** Callback appelé avant chaque tentative */
+  onRetry?: (failureCount: number, error: any) => void
+  /** Nombre de retry personnalisé (par défaut: 3) */
+  retry?: ((failureCount: number, error: any) => boolean) | boolean | number
+  /** Délai entre les retry (par défaut: exponentiel backoff) */
+  retryDelay?: ((retryAttempt: number, error: any) => number) | number
+  /** Affiche automatiquement les notifications de succès/erreur (par défaut: true) */
+  showNotifications?: boolean
+  /** Désactive le retry sur les erreurs de validation (par défaut: true) */
+  skipRetryOnValidationErrors?: boolean
+}
 
-  // Propriétés React Query
-  canRetry: boolean
-  retry: () => void
-  failureCount: number
-  error: any
-  status: 'idle' | 'pending' | 'error' | 'success'
-  isIdle: boolean
-  isPending: boolean
-  isError: boolean
-  isSuccess: boolean
-  resetMutation: () => void
+// Types simplifiés pour éviter les conflits d'import et les types trop profonds
+type FormDataConvertible = boolean | Date | File | null | number | string | undefined
+
+interface VisitOptions {
+  data?: Record<string, FormDataConvertible | FormDataConvertible[]>
+  errorBag?: string
+  except?: string[]
+  forceFormData?: boolean
+  headers?: Record<string, string>
+  method?: 'delete' | 'get' | 'patch' | 'post' | 'put'
+  onBefore?: () => boolean | void
+  onCancel?: () => void
+  onError?: (errors: any) => void
+  onFinish?: (visit: any) => void
+  only?: string[]
+  onProgress?: (progress: any) => void
+  onStart?: (visit: any) => void
+  onSuccess?: (page: any) => void
+  preserveScroll?: boolean
+  preserveState?: boolean
+  queryStringArrayFormat?: 'brackets' | 'indices'
+  replace?: boolean
 }
 
 /**
@@ -149,54 +127,55 @@ export interface FormQueryHelpers<TData extends FormDataType = FormDataType> {
  * }
  * ```
  */
-export function useFormQuery<TData extends FormDataType = FormDataType>(
+export function useFormQuery<TData extends Record<string, any> = Record<string, any>>(
   initialData: TData,
   options: UseFormQueryOptions = {}
 ): FormQueryHelpers<TData> {
   const {
+    fieldLabels = {},
+    notifications = {},
+    onError,
+    onMutate,
+    onRetry,
+    onSettled,
+    onSuccess,
     retry = 3,
     retryDelay = (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    skipRetryOnValidationErrors = true,
     showNotifications = true,
-    notifications = {},
-    fieldLabels = {},
-    onRetry,
-    onError,
-    onSuccess,
-    onMutate,
-    onSettled,
+    skipRetryOnValidationErrors = true,
     ...mutationOptions
   } = options
 
   // Hook pour les notifications
   const { showNotification } = useNotification()
 
-  // Utilise le hook useForm d'Inertia
+  // Utilise le hook useForm d'Inertia avec un type plus explicite
   const form = useForm<TData>(initialData)
 
   // Référence pour stocker les derniers paramètres de soumission
-  const lastSubmissionRef = useRef<{
-    method: 'get' | 'post' | 'put' | 'patch' | 'delete'
-    url: string
+  const lastSubmissionRef = useRef<null | {
+    method: 'delete' | 'get' | 'patch' | 'post' | 'put'
     options?: VisitOptions
-  } | null>(null)
+    url: string
+  }>(null)
 
   // Mutation React Query pour gérer le retry
-  const mutation = useMutation<any, any, { url: string; options?: VisitOptions }>({
-    mutationFn: async ({ url, options: visitOptions }: { url: string; options?: VisitOptions }) => {
+
+  const mutation = useMutation<any, any, { options?: VisitOptions; url: string }>({
+    mutationFn: async ({ options: visitOptions, url }: { options?: VisitOptions; url: string }) => {
       return new Promise((resolve, reject) => {
         // Stocke les paramètres pour un retry éventuel
         lastSubmissionRef.current = {
           method: visitOptions?.method || 'post',
-          url,
           options: visitOptions,
+          url,
         }
 
         const enhancedOptions: VisitOptions = {
           ...visitOptions,
-          onSuccess: (page: any) => {
-            resolve(page)
-            visitOptions?.onSuccess?.(page)
+          onCancel: () => {
+            reject(new Error('Request was cancelled'))
+            visitOptions?.onCancel?.()
           },
           onError: (errors: any) => {
             reject(new Error(JSON.stringify(errors)))
@@ -211,15 +190,46 @@ export function useFormQuery<TData extends FormDataType = FormDataType>(
           onStart: (visit: any) => {
             visitOptions?.onStart?.(visit)
           },
-          onCancel: () => {
-            reject(new Error('Request was cancelled'))
-            visitOptions?.onCancel?.()
+          onSuccess: (page: any) => {
+            resolve(page)
+            visitOptions?.onSuccess?.(page)
           },
         }
 
         // Utilise la méthode submit du form Inertia
         form.submit(visitOptions?.method || 'post', url, enhancedOptions)
       })
+    },
+    onError: (error, variables, context) => {
+      // Affiche une notification d'erreur si activé
+      if (showNotifications) {
+        const errorMessage = notifications.error || 'Une erreur est survenue'
+        showNotification('error', errorMessage)
+      }
+
+      if (onError) {
+        onError(error, variables, context)
+      }
+    },
+    onMutate: (variables) => {
+      if (onMutate) {
+        return onMutate(variables)
+      }
+    },
+    onSettled: (data, error, variables, context) => {
+      if (onSettled) {
+        onSettled(data, error, variables, context)
+      }
+    },
+    onSuccess: (data, variables, context) => {
+      // Affiche une notification de succès si activé
+      if (showNotifications && notifications.success) {
+        showNotification('success', notifications.success)
+      }
+
+      if (onSuccess) {
+        onSuccess(data, variables, context)
+      }
     },
     retry: (failureCount, error) => {
       // Affiche une notification de retry si activé
@@ -278,87 +288,56 @@ export function useFormQuery<TData extends FormDataType = FormDataType>(
       typeof retryDelay === 'function'
         ? (attemptIndex, error) => retryDelay(attemptIndex, error)
         : retryDelay,
-    onMutate: (variables) => {
-      if (onMutate) {
-        return onMutate(variables)
-      }
-    },
-    onError: (error, variables, context) => {
-      // Affiche une notification d'erreur si activé
-      if (showNotifications) {
-        const errorMessage = notifications.error || 'Une erreur est survenue'
-        showNotification('error', errorMessage)
-      }
-
-      if (onError) {
-        onError(error, variables, context)
-      }
-    },
-    onSuccess: (data, variables, context) => {
-      // Affiche une notification de succès si activé
-      if (showNotifications && notifications.success) {
-        showNotification('success', notifications.success)
-      }
-
-      if (onSuccess) {
-        onSuccess(data, variables, context)
-      }
-    },
-    onSettled: (data, error, variables, context) => {
-      if (onSettled) {
-        onSettled(data, error, variables, context)
-      }
-    },
     ...mutationOptions,
   })
 
   // Fonctions pour les différentes méthodes HTTP
   const post = useCallback(
     (url: string, options?: VisitOptions) => {
-      mutation.mutate({ url, options: { ...options, method: 'post' } })
+      mutation.mutate({ options: { ...options, method: 'post' }, url })
     },
-    [mutation]
+    [mutation.mutate]
   )
 
   const put = useCallback(
     (url: string, options?: VisitOptions) => {
-      mutation.mutate({ url, options: { ...options, method: 'put' } })
+      mutation.mutate({ options: { ...options, method: 'put' }, url })
     },
-    [mutation]
+    [mutation.mutate]
   )
 
   const patch = useCallback(
     (url: string, options?: VisitOptions) => {
-      mutation.mutate({ url, options: { ...options, method: 'patch' } })
+      mutation.mutate({ options: { ...options, method: 'patch' }, url })
     },
-    [mutation]
+    [mutation.mutate]
   )
 
   const deleteMethod = useCallback(
     (url: string, options?: VisitOptions) => {
-      mutation.mutate({ url, options: { ...options, method: 'delete' } })
+      mutation.mutate({ options: { ...options, method: 'delete' }, url })
     },
-    [mutation]
+    [mutation.mutate]
   )
 
   const get = useCallback(
     (url: string, options?: VisitOptions) => {
-      mutation.mutate({ url, options: { ...options, method: 'get' } })
+      mutation.mutate({ options: { ...options, method: 'get' }, url })
     },
-    [mutation]
+    [mutation.mutate]
   )
 
   const submit = useCallback(
-    (method: 'get' | 'post' | 'put' | 'patch' | 'delete', url: string, options?: VisitOptions) => {
-      mutation.mutate({ url, options: { ...options, method } })
+    (method: 'delete' | 'get' | 'patch' | 'post' | 'put', url: string, options?: VisitOptions) => {
+      mutation.mutate({ options: { ...options, method }, url })
     },
-    [mutation]
+    [mutation.mutate]
   )
 
   // Fonction de retry manuel
   const retryMutation = useCallback(() => {
     if (lastSubmissionRef.current) {
-      const { method, url, options } = lastSubmissionRef.current
+      const { method, options, url } = lastSubmissionRef.current
       submit(method, url, options)
     }
   }, [submit])
@@ -381,45 +360,68 @@ export function useFormQuery<TData extends FormDataType = FormDataType>(
   }, [form.errors, fieldLabels])
 
   return {
+    cancel: form.cancel,
+    // Propriétés React Query
+    canRetry: mutation.isError && !mutation.isPending,
+    clearErrors: form.clearErrors as (...fields: (keyof TData)[]) => void,
     // Propriétés du form Inertia
     data: form.data,
-    isDirty: form.isDirty,
-    processing: form.processing || mutation.isPending,
-    progress: form.progress,
+    delete: deleteMethod,
+    error: mutation.error,
     errors: form.errors as Partial<Record<keyof TData, string>>,
+    failureCount: mutation.failureCount,
     formattedErrors,
+    get,
     hasErrors: form.hasErrors,
-    wasSuccessful: form.wasSuccessful,
-    recentlySuccessful: form.recentlySuccessful,
-    setData: form.setData,
-    transform: form.transform as (callback: (data: TData) => TData) => void,
-    setDefaults: form.setDefaults,
-    clearErrors: form.clearErrors as (...fields: (keyof TData)[]) => void,
-    reset: form.reset as (...fields: (keyof TData)[]) => void,
-    resetAndClearErrors: form.resetAndClearErrors as (...fields: (keyof TData)[]) => void,
-    setError: form.setError,
-    cancel: form.cancel,
+    isDirty: form.isDirty,
+    isError: mutation.isError,
+    isIdle: mutation.isIdle,
+    isPending: mutation.isPending,
+    isSuccess: mutation.isSuccess,
+    patch,
 
     // Méthodes HTTP avec retry
     post,
+    processing: form.processing || mutation.isPending,
+    progress: form.progress,
     put,
-    patch,
-    delete: deleteMethod,
-    get,
-    submit,
+    recentlySuccessful: form.recentlySuccessful,
+    reset: form.reset as (...fields: (keyof TData)[]) => void,
 
-    // Propriétés React Query
-    canRetry: mutation.isError && !mutation.isPending,
-    retry: retryMutation,
-    failureCount: mutation.failureCount,
-    error: mutation.error,
-    status: mutation.status,
-    isIdle: mutation.isIdle,
-    isPending: mutation.isPending,
-    isError: mutation.isError,
-    isSuccess: mutation.isSuccess,
+    resetAndClearErrors: form.resetAndClearErrors as (...fields: (keyof TData)[]) => void,
     resetMutation: mutation.reset,
+    retry: retryMutation,
+    setData: form.setData,
+    setDefaults: form.setDefaults,
+    setError: form.setError,
+    status: mutation.status,
+    submit,
+    transform: form.transform,
+    wasSuccessful: form.wasSuccessful,
   }
+}
+
+// Fonction utilitaire pour formatter les messages d'erreur
+function formatErrorMessage(
+  fieldName: string,
+  message: string,
+  fieldLabels?: Record<string, string>
+): string {
+  const label = fieldLabels?.[fieldName]
+  if (label) {
+    // Remplace le nom du champ par le label dans le message
+    const regex = new RegExp(`\\b${fieldName}\\b`, 'gi')
+    return message.replace(regex, label)
+  }
+
+  // Si pas de label personnalisé, convertit camelCase en format lisible
+  const readableFieldName = fieldName
+    .replace(/([A-Z])/g, ' $1') // Ajoute un espace avant les majuscules
+    .replace(/^./, (str) => str.toUpperCase()) // Met la première lettre en majuscule
+    .trim()
+
+  const regex = new RegExp(`\\b${fieldName}\\b`, 'gi')
+  return message.replace(regex, readableFieldName)
 }
 
 export default useFormQuery

@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { format } from '@/utils/datetime'
 import { toast } from 'sonner'
 
 import { useTimer } from '@/contexts/TimerContext'
 import { TimerEntry, timerService } from '@/lib/mock_data'
+import { format } from '@/utils/datetime'
 
 // Query Keys
 export const timeEntriesKeys = {

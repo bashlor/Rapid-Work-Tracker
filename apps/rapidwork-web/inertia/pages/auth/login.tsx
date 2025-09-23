@@ -1,38 +1,39 @@
-import React from 'react'
-import { Link } from '@tuyau/inertia/react'
 import { Head } from '@inertiajs/react'
+import { Link } from '@tuyau/inertia/react'
+import { AlertCircle, Clock, Lock, Mail } from 'lucide-react'
+import React from 'react'
+
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { FormInput } from '@/components/ui/form-input'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Clock, Mail, Lock, AlertCircle } from 'lucide-react'
-import { LoginPageProps } from '@/types/page_props'
 import { useFormQuery } from '@/hooks/useFormQuery'
 import { tuyau } from '@/tuyau'
+import { LoginPageProps } from '@/types/page_props'
 
 export default function Login(props: LoginPageProps) {
   const { flash } = props
 
-  const { data, setData, post, processing, formattedErrors, reset } = useFormQuery(
+  const { data, formattedErrors, post, processing, reset, setData } = useFormQuery(
     {
       email: '',
       password: '',
       remember: false,
     },
     {
-      // Configuration de retry
-      retry: 3,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      onRetry: (failureCount) => {
-        console.info(`Nouvelle tentative de connexion ${failureCount}`)
-      },
-      skipRetryOnValidationErrors: true,
       // Mapping des labels pour les messages d'erreur
       fieldLabels: {
         email: 'Email',
         password: 'Mot de passe',
         remember: 'Se souvenir de moi',
       },
+      onRetry: (failureCount) => {
+        console.info(`Nouvelle tentative de connexion ${failureCount}`)
+      },
+      // Configuration de retry
+      retry: 3,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      skipRetryOnValidationErrors: true,
     }
   )
 
@@ -53,7 +54,7 @@ export default function Login(props: LoginPageProps) {
         <div className="w-full max-w-md">
           {/* Logo */}
           <div className="text-center mb-8">
-            <Link route={'landing'} className="inline-flex items-center space-x-2">
+            <Link className="inline-flex items-center space-x-2" route={'landing'}>
               <Clock className="h-8 w-8 text-blue-600" />
               <span className="text-2xl font-bold text-gray-900">RapidWorkTracker</span>
             </Link>
@@ -67,7 +68,7 @@ export default function Login(props: LoginPageProps) {
           <CardContent>
             {/* Flash messages */}
             {flash?.error && (
-              <Alert variant="destructive" className="mb-4">
+              <Alert className="mb-4" variant="destructive">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{flash.error}</AlertDescription>
               </Alert>
@@ -79,46 +80,46 @@ export default function Login(props: LoginPageProps) {
               </Alert>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSubmit}>
               <FormInput
-                label="Email"
-                type="email"
-                value={data.email}
-                onChange={(value) => setData('email', String(value))}
-                placeholder="votre@email.com"
                 error={formattedErrors.email}
                 icon={<Mail className="h-4 w-4" />}
+                label="Email"
+                onChange={(value) => setData('email', String(value))}
+                placeholder="votre@email.com"
                 required
+                type="email"
+                value={data.email}
               />
 
               <FormInput
-                label="Mot de passe"
-                type="password"
-                value={data.password}
-                onChange={(value) => setData('password', String(value))}
-                placeholder="Votre mot de passe"
                 error={formattedErrors.password}
                 icon={<Lock className="h-4 w-4" />}
+                label="Mot de passe"
+                onChange={(value) => setData('password', String(value))}
+                placeholder="Votre mot de passe"
                 required
+                type="password"
+                value={data.password}
               />
 
               <div className="flex items-center space-x-2">
                 <input
-                  type="checkbox"
-                  id="remember"
                   checked={data.remember}
-                  onChange={(e) => setData('remember', e.target.checked as any)}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  id="remember"
+                  onChange={(e) => setData('remember', e.target.checked as any)}
+                  type="checkbox"
                 />
-                <label htmlFor="remember" className="text-sm text-gray-600">
+                <label className="text-sm text-gray-600" htmlFor="remember">
                   Se souvenir de moi
                 </label>
               </div>
 
               <Button
-                type="submit"
                 className="w-full bg-blue-600 hover:bg-blue-700"
                 disabled={processing}
+                type="submit"
               >
                 {processing ? 'Connexion...' : 'Se connecter'}
               </Button>
@@ -127,15 +128,15 @@ export default function Login(props: LoginPageProps) {
               <div className="text-sm text-gray-600">
                 Pas encore de compte ?{' '}
                 <Link
-                  route={'register.show'}
                   className="text-blue-600 hover:text-blue-700 font-medium"
+                  route={'register.show'}
                 >
                   Créer un compte
                 </Link>
               </div>
 
               <div className="pt-4">
-                <Link route={'landing'} className="text-sm text-gray-500 hover:text-gray-700">
+                <Link className="text-sm text-gray-500 hover:text-gray-700" route={'landing'}>
                   ← Retour
                 </Link>
               </div>

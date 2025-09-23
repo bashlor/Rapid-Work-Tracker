@@ -1,7 +1,7 @@
 import { usePage } from '@inertiajs/react'
+import { AlertTriangle, CheckCircle, Info, Play, Square, Timer, XCircle } from 'lucide-react'
 import { useEffect } from 'react'
 import { toast } from 'sonner'
-import { CheckCircle, XCircle, AlertTriangle, Info, Timer, Play, Square } from 'lucide-react'
 
 interface Notification {
   message: string
@@ -9,10 +9,10 @@ interface Notification {
 }
 
 interface PagePropsWithNotification {
+  [key: string]: any
   flash?: {
     notification?: Notification
   }
-  [key: string]: any
 }
 
 export function useNotification() {
@@ -38,6 +38,12 @@ export function useNotification() {
           icon: <XCircle className="h-5 w-5" />,
         })
         break
+      case 'info':
+        toast.info(message, {
+          ...baseOptions,
+          icon: <Info className="h-5 w-5" />,
+        })
+        break
       case 'success':
         toast.success(message, {
           ...baseOptions,
@@ -50,63 +56,57 @@ export function useNotification() {
           icon: <AlertTriangle className="h-5 w-5" />,
         })
         break
-      case 'info':
-        toast.info(message, {
-          ...baseOptions,
-          icon: <Info className="h-5 w-5" />,
-        })
-        break
       default:
         toast(message, baseOptions)
     }
   }
 
   // Fonctions spécialisées pour le contexte de l'app
-  const showTimerNotification = (type: 'start' | 'pause' | 'stop', taskName: string) => {
+  const showTimerNotification = (type: 'pause' | 'start' | 'stop', taskName: string) => {
     const messages = {
-      start: `Chronomètre démarré pour: ${taskName}`,
       pause: `Chronomètre mis en pause: ${taskName}`,
+      start: `Chronomètre démarré pour: ${taskName}`,
       stop: `Chronomètre arrêté: ${taskName}`,
     }
 
     const icons = {
-      start: <Play className="h-5 w-5 text-green-600" />,
       pause: <Timer className="h-5 w-5 text-yellow-600" />,
+      start: <Play className="h-5 w-5 text-green-600" />,
       stop: <Square className="h-5 w-5 text-red-600" />,
     }
     
 
     toast(messages[type], {
-      icon: icons[type],
-      duration: 3000,
       description: type === 'stop' ? 'Tâche sauvegardée automatiquement' : undefined,
+      duration: 3000,
+      icon: icons[type],
     })
   }
 
   const showActionNotification = (action: string, success: boolean = true, details?: string) => {
     if (success) {
       toast.success(`${action} réalisé avec succès`, {
-        icon: <CheckCircle className="h-5 w-5" />,
         description: details,
         duration: 3000,
+        icon: <CheckCircle className="h-5 w-5" />,
       })
     } else {
       toast.error(`Erreur lors de ${action}`, {
-        icon: <XCircle className="h-5 w-5" />,
         description: details,
         duration: 5000,
+        icon: <XCircle className="h-5 w-5" />,
       })
     }
   }
 
   return {
+    error: (message: string, options?: any) => showNotification('error', message, options),
+    info: (message: string, options?: any) => showNotification('info', message, options),
+    showActionNotification,
     showNotification,
     showTimerNotification,
-    showActionNotification,
     // Raccourcis pour les types courants
     success: (message: string, options?: any) => showNotification('success', message, options),
-    error: (message: string, options?: any) => showNotification('error', message, options),
     warning: (message: string, options?: any) => showNotification('warning', message, options),
-    info: (message: string, options?: any) => showNotification('info', message, options),
   }
 }

@@ -1,16 +1,17 @@
-import React from 'react'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import React from 'react'
 
-interface ErrorBoundaryState {
-  hasError: boolean
-  error?: Error
-  errorInfo?: React.ErrorInfo
-}
+import { Button } from '@/components/ui/button'
 
 interface ErrorBoundaryProps {
   children: React.ReactNode
   fallback?: React.ComponentType<{ error?: Error; resetError: () => void }>
+}
+
+interface ErrorBoundaryState {
+  error?: Error
+  errorInfo?: React.ErrorInfo
+  hasError: boolean
 }
 
 class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
@@ -21,7 +22,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     // Update state so the next render will show the fallback UI
-    return { hasError: true, error }
+    return { error, hasError: true }
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
@@ -34,10 +35,6 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
       error,
       errorInfo,
     })
-  }
-
-  resetError = () => {
-    this.setState({ hasError: false, error: undefined, errorInfo: undefined })
   }
 
   render() {
@@ -61,14 +58,14 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
               Un problème inattendu s'est produit. Vous pouvez essayer de recharger cette section.
             </p>
             <div className="space-y-2">
-              <Button onClick={this.resetError} className="w-full">
+              <Button className="w-full" onClick={this.resetError}>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Réessayer
               </Button>
               <Button 
-                variant="outline" 
+                className="w-full" 
                 onClick={() => window.location.reload()} 
-                className="w-full"
+                variant="outline"
               >
                 Recharger la page
               </Button>
@@ -90,6 +87,10 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
     }
 
     return this.props.children
+  }
+
+  resetError = () => {
+    this.setState({ error: undefined, errorInfo: undefined, hasError: false })
   }
 }
 

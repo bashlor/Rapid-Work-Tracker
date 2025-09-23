@@ -1,41 +1,42 @@
 import * as React from 'react'
-import { Label } from '@/components/ui/label'
+
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 
 interface FormInputProps {
-  label?: string
-  type?: 'text' | 'password' | 'email' | 'number' | 'color' | 'select' | 'group'
-  value?: string | number
-  placeholder?: string
-  error?: string
-  disabled?: boolean
-  required?: boolean
-  className?: string
-  onChange?: (value: string | number) => void
   children?: React.ReactNode
-  triggerSlot?: React.ReactNode
+  className?: string
+  disabled?: boolean
+  error?: string
   icon?: React.ReactNode
+  label?: string
   name?: string
+  onChange?: (value: number | string) => void
+  placeholder?: string
+  required?: boolean
+  triggerSlot?: React.ReactNode
+  type?: 'color' | 'email' | 'group' | 'number' | 'password' | 'select' | 'text'
+  value?: number | string
 }
 
 const FormInput = React.forwardRef<HTMLInputElement, FormInputProps>(
   (
     {
+      children,
+      className,
+      disabled = false,
+      error,
+      icon,
       label,
+      name,
+      onChange,
+      placeholder,
+      required = false,
+      triggerSlot,
       type = 'text',
       value,
-      placeholder,
-      error,
-      disabled = false,
-      required = false,
-      className,
-      onChange,
-      children,
-      triggerSlot,
-      icon,
-      name,
       ...props
     },
     ref
@@ -51,7 +52,7 @@ const FormInput = React.forwardRef<HTMLInputElement, FormInputProps>(
       return inputRef.current as HTMLInputElement
     })
 
-    const handleChange = (newValue: string | number) => {
+    const handleChange = (newValue: number | string) => {
       onChange?.(newValue)
     }
 
@@ -69,22 +70,22 @@ const FormInput = React.forwardRef<HTMLInputElement, FormInputProps>(
         return (
           <div className="relative items-center w-full">
             <input
-              type="color"
-              value={value?.toString() || ''}
-              onChange={handleInputChange}
               className="absolute inset-y-2 rounded w-6 h-6 start-2"
               disabled={disabled}
+              onChange={handleInputChange}
+              type="color"
+              value={value?.toString() || ''}
             />
             <Input
-              ref={inputRef}
-              type="text"
-              value={value?.toString() || ''}
-              onChange={handleInputChange}
               className="pl-10"
               disabled={disabled}
-              required={required}
-              placeholder={placeholder}
               name={name}
+              onChange={handleInputChange}
+              placeholder={placeholder}
+              ref={inputRef}
+              required={required}
+              type="text"
+              value={value?.toString() || ''}
               {...props}
             />
           </div>
@@ -94,10 +95,10 @@ const FormInput = React.forwardRef<HTMLInputElement, FormInputProps>(
       if (type === 'select') {
         return (
           <Select
-            value={value?.toString() || ''}
-            onValueChange={handleChange}
             disabled={disabled}
+            onValueChange={handleChange}
             required={required}
+            value={value?.toString() || ''}
           >
             <SelectTrigger ref={selectRef}>
               {triggerSlot || <SelectValue placeholder={placeholder} />}
@@ -109,14 +110,14 @@ const FormInput = React.forwardRef<HTMLInputElement, FormInputProps>(
 
       return (
         <Input
+          className={icon ? 'pl-10' : ''}
+          disabled={disabled}
+          onChange={handleInputChange}
+          placeholder={placeholder}
           ref={inputRef}
+          required={required}
           type={type}
           value={value?.toString() || ''}
-          onChange={handleInputChange}
-          disabled={disabled}
-          required={required}
-          placeholder={placeholder}
-          className={icon ? 'pl-10' : ''}
           {...props}
         />
       )

@@ -7,7 +7,8 @@
     "paths": {
       "@/*": ["./*"],
       "@/lib/*": ["./lib/*"],
-      "@components/*": ["./components/*"]
+      "@/views/*": ["./views/*"],
+      "@/components/*": ["./components/*"]
     }
   },
   "include": ["./**/*.ts", "./**/*.tsx"]

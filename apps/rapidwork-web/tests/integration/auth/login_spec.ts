@@ -96,10 +96,11 @@ test.group('Login Controller - API Integration', (group) => {
       .header('Accept', 'application/json')
       .withCsrfToken()
 
+    console.log(route('api.login'))
+
     // Assert
     const status = response.status()
     const body = response.body()
-
     assert.equal(status, 200)
     assert.equal(body.success, true)
     assert.equal(body.message, 'User authenticated successfully')

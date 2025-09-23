@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
-import { format } from '@/utils/datetime'
+import { useEffect, useState } from 'react'
+
 import { TaskWithSessions } from '@/types/backend'
+import { format } from '@/utils/datetime'
 
 // Re-export pour compatibilité
 export { type TaskWithSessions } from '@/types/backend'
@@ -73,7 +74,7 @@ export const useActivityFilters = (tasksWithSessions: TaskWithSessions[]) => {
   }
 
   // Toggle all tasks selection
-  const toggleAllTasksSelection = (checked: boolean | 'indeterminate') => {
+  const toggleAllTasksSelection = (checked: 'indeterminate' | boolean) => {
     const isChecked = checked === true
 
     const updatedTasks = filteredTasks.map((task) => ({
@@ -97,21 +98,21 @@ export const useActivityFilters = (tasksWithSessions: TaskWithSessions[]) => {
   }
 
   return {
+    clearAllSelections,
     date,
+    domainFilter,
+    filteredTasks,
+    handleResetFilters,
+    selectedTasksCount,
     setDate,
-    taskFilter,
+    setDomainFilter,
+    setFilteredTasks,
+    setSubdomainFilter,
     setTaskFilter,
     subdomainFilter,
-    setSubdomainFilter,
-    domainFilter,
-    setDomainFilter,
-    filteredTasks,
-    setFilteredTasks,
-    selectedTasksCount,
-    handleResetFilters,
+    taskFilter,
+    toggleAllTasksSelection,
     toggleTaskExpansion,
     toggleTaskSelection,
-    toggleAllTasksSelection,
-    clearAllSelections,
   }
 }

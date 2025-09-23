@@ -221,51 +221,8 @@ export function formatDayNumber(date: Date): string {
 }
 
 // Fonctions de formatage
-export function formatDuration(milliseconds: number): string {
-  const totalMinutes = Math.floor(milliseconds / 60000)
-  const hours = Math.floor(totalMinutes / 60)
-  const minutes = totalMinutes % 60
-
-  if (hours === 0) {
-    return `${minutes}min`
-  }
-  if (minutes === 0) {
-    return `${hours}h`
-  }
-  return `${hours}h${minutes}min`
-}
-
-export function formatDurationFromMinutes(minutes: number): string {
-  const hours = Math.floor(minutes / 60)
-  const mins = minutes % 60
-
-  if (hours === 0) {
-    return `${mins}min`
-  }
-  if (mins === 0) {
-    return `${hours}h`
-  }
-  return `${hours}h${mins}min`
-}
-
-export function formatDurationFromSeconds(seconds: number): string {
-  // Si le nombre est très grand, c'est probablement en millisecondes
-  let totalSeconds = seconds
-  if (seconds > 86400) {
-    totalSeconds = Math.floor(seconds / 1000)
-  }
-
-  const hours = Math.floor(totalSeconds / 3600)
-  const minutes = Math.floor((totalSeconds % 3600) / 60)
-
-  if (hours === 0) {
-    return `${minutes}min`
-  }
-  if (minutes === 0) {
-    return `${hours}h`
-  }
-  return `${hours}h${minutes}min`
-}
+// Re-export duration formatting functions from datetime.ts to maintain compatibility
+export { formatDuration, formatDurationFromMinutes, formatDurationFromSeconds } from './datetime'
 
 // Formatage du mois
 export function formatMonth(date: Date): string {

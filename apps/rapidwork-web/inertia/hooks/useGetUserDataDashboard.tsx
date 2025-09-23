@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { tuyau } from '../tuyau'
+import { useMemo, useState } from 'react'
+
 import { queryKeys } from '../lib/query_keys'
+import { tuyau } from '../tuyau'
 
 interface UseGetUserDataDashboardOptions {
   currentDate?: string
@@ -12,7 +13,7 @@ export function useGetUserDataDashboard(options: UseGetUserDataDashboardOptions 
   const { currentDate, enabled = true } = options
 
   return useQuery({
-    queryKey: [queryKeys.dashboard.all[0], currentDate || 'current'],
+    enabled,
     queryFn: async () => {
       const response = await tuyau.api.dashboard.$get({
         query: currentDate ? { currentDate } : undefined,
@@ -21,9 +22,9 @@ export function useGetUserDataDashboard(options: UseGetUserDataDashboardOptions 
       const responseData = response as any
       return responseData.data
     },
-    enabled,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    queryKey: [queryKeys.dashboard.all[0], currentDate || 'current'],
     refetchInterval: 1000 * 60 * 5, // Refetch every 5 minutes
+    staleTime: 1000 * 60 * 5, // 5 minutes
   })
 }
 
@@ -43,7 +44,7 @@ export function useWeekNavigation(initialDate?: Date) {
     weekEnd.setDate(weekStart.getDate() + 6)
     weekEnd.setHours(23, 59, 59, 999)
     
-    return { weekStart, weekEnd }
+    return { weekEnd, weekStart }
   }
 
   const goToPreviousWeek = () => {
@@ -64,17 +65,17 @@ export function useWeekNavigation(initialDate?: Date) {
 
   const isCurrentWeekValue = useMemo(() => {
     const now = new Date()
-    const { weekStart, weekEnd } = getWeekBoundaries(currentWeek)
+    const { weekEnd, weekStart } = getWeekBoundaries(currentWeek)
     return now >= weekStart && now <= weekEnd
   }, [currentWeek])
 
   return {
     currentWeek,
-    weekBoundaries: getWeekBoundaries(currentWeek),
-    goToPreviousWeek,
-    goToNextWeek,
     goToCurrentWeek,
+    goToNextWeek,
+    goToPreviousWeek,
     isCurrentWeek: isCurrentWeekValue,
     setCurrentWeek,
+    weekBoundaries: getWeekBoundaries(currentWeek),
   }
 }

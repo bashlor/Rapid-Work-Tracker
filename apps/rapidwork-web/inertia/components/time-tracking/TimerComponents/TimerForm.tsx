@@ -1,46 +1,47 @@
 import React from 'react'
-import TaskSelection from '../TaskSelection'
+
+import TaskSelection from '../TaskComponents/TaskSelection'
 
 interface TimerFormProps {
-  isCustomTask: boolean
-  setIsCustomTask: (isCustom: boolean) => void
-  customTaskName: string
-  setCustomTaskName: (name: string) => void
   customDomain: string
-  setCustomDomain: (domain: string) => void
   customSubdomain: string
-  setCustomSubdomain: (subdomain: string) => void
-  selectedTaskId: string
-  setSelectedTaskId: (id: string) => void
+  customTaskName: string
+  isCustomTask: boolean
   isIdle: boolean
+  selectedTaskId: string
+  setCustomDomain: (domain: string) => void
+  setCustomSubdomain: (subdomain: string) => void
+  setCustomTaskName: (name: string) => void
+  setIsCustomTask: (isCustom: boolean) => void
+  setSelectedTaskId: (id: string) => void
 }
 
 const TimerForm = ({
-  isCustomTask,
-  setIsCustomTask,
-  customTaskName,
-  setCustomTaskName,
   customDomain,
-  setCustomDomain,
   customSubdomain,
-  setCustomSubdomain,
-  selectedTaskId,
-  setSelectedTaskId,
+  customTaskName,
+  isCustomTask,
   isIdle,
+  selectedTaskId,
+  setCustomDomain,
+  setCustomSubdomain,
+  setCustomTaskName,
+  setIsCustomTask,
+  setSelectedTaskId,
 }: TimerFormProps) => {
   return (
     <TaskSelection
-      isCustomTask={isCustomTask}
-      setIsCustomTask={setIsCustomTask}
-      customTaskName={customTaskName}
-      setCustomTaskName={setCustomTaskName}
       customDomain={customDomain}
-      setCustomDomain={setCustomDomain}
       customSubdomain={customSubdomain}
-      setCustomSubdomain={setCustomSubdomain}
-      selectedTaskId={selectedTaskId}
-      setSelectedTaskId={setSelectedTaskId}
+      customTaskName={customTaskName}
+      isCustomTask={isCustomTask}
       isIdle={isIdle}
+      selectedTaskId={selectedTaskId}
+      setCustomDomain={setCustomDomain}
+      setCustomSubdomain={setCustomSubdomain}
+      setCustomTaskName={setCustomTaskName}
+      setIsCustomTask={setIsCustomTask}
+      setSelectedTaskId={setSelectedTaskId}
     />
   )
 }

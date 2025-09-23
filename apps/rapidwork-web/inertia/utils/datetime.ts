@@ -187,6 +187,24 @@ export function formatDurationFromSeconds(seconds: number): string {
   return `${hours}h${minutes}min`
 }
 
+// Format session date range, handling single-day and multi-day sessions
+export function formatSessionDateRange(startTime: string, endTime: string): string {
+  const start = new Date(startTime)
+  const end = new Date(endTime)
+
+  // Check if session spans multiple days
+  const startDay = format(start, 'yyyy-MM-dd')
+  const endDay = format(end, 'yyyy-MM-dd')
+
+  if (startDay === endDay) {
+    // Same day: show date once with time range
+    return `${format(start, 'dd/MM/yyyy HH:mm')} - ${format(end, 'HH:mm')}`
+  } else {
+    // Different days: show full date and time for both
+    return `${format(start, 'dd/MM/yyyy HH:mm')} - ${format(end, 'dd/MM/yyyy HH:mm')}`
+  }
+}
+
 // =============================================================================
 // ORIGINAL DATETIME UTILITIES (preservées)
 // =============================================================================
@@ -214,6 +232,13 @@ export function formatTimeRange(
   const s = formatTimeDisplay(start, opts)
   const e = formatTimeDisplay(end, opts)
   return `${s} - ${e}`
+}
+
+// Format week range for dashboard display (e.g., "1 Jan - 7 Jan 2025")
+export function formatWeekRange(weekStart: Date, weekEnd: Date): string {
+  const start = format(weekStart, 'd MMM')
+  const end = format(weekEnd, 'd MMM yyyy')
+  return `${start} - ${end}`
 }
 
 export function isEndAfterStartLocal(startLocal?: string, endLocal?: string): boolean {
@@ -264,15 +289,15 @@ export function normalizeDuration(
   return dur.as('milliseconds')
 }
 
+// =============================================================================
+// FONCTIONS UTILITAIRES POUR REMPLACER toLocaleString() ET SIMILAIRES
+// =============================================================================
+
 // Parse ISO string (replaces parseISO from date-fns)
 export function parseISO(dateString: string): Date {
   const dt = Lx.fromISO(dateString)
   return dt.toJSDate()
 }
-
-// =============================================================================
-// FONCTIONS UTILITAIRES POUR REMPLACER toLocaleString() ET SIMILAIRES
-// =============================================================================
 
 export function parseTimeToMinutes(time: string): number {
   // Format HH:mm
@@ -296,6 +321,22 @@ export function parseTimeToMinutes(time: string): number {
   } catch {
     return 0
   }
+}
+
+// Safe duration formatter that handles various input types and invalid values
+export function safeDurationFormat(duration: any): string {
+  // Handle null, undefined, or invalid values
+  if (duration === null || duration === undefined) return '0min'
+
+  // If it's already a formatted string, return it
+  if (typeof duration === 'string') return duration
+
+  // Convert to number and validate
+  const numericDuration = Number(duration)
+  if (Number.isNaN(numericDuration) || numericDuration < 0) return '0min'
+
+  // Use the utility function with a valid number
+  return formatDurationFromMinutes(numericDuration)
 }
 
 export function startOfWeek(date: Date | string, options?: { weekStartsOn?: number }): Date {

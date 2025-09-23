@@ -19,7 +19,7 @@
     "clean": "rm -rf dist",
     "bundle": "tsup ./index.ts --dts --minify",
     "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
     "test": "tsx bin/test.ts",
     "test:watch": "tsx bin/test.ts --watch"
   },

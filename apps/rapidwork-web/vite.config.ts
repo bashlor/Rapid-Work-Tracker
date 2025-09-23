@@ -10,6 +10,7 @@ export default defineConfig({
   define: {
     VITE_API_BASE_URL: JSON.stringify(process.env.VITE_API_BASE_URL),
     VITE_APP_DEBUG: JSON.stringify(process.env.VITE_APP_DEBUG),
+    VITE_APP_NAME: JSON.stringify('Rapid Work Tracker'),
     VITE_NODE_ENV: JSON.stringify(process.env.VITE_NODE_ENV),
   },
   plugins: [
@@ -25,7 +26,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(getDirname(import.meta.url), 'inertia'),
-      '@components': path.resolve(getDirname(import.meta.url), 'inertia/components'),
+      '@/components': path.resolve(getDirname(import.meta.url), 'inertia/components'),
+      '@/hooks': path.resolve(getDirname(import.meta.url), 'inertia/hooks'),
+      '@/lib': path.resolve(getDirname(import.meta.url), 'inertia/lib'),
+      '@/views': path.resolve(getDirname(import.meta.url), 'inertia/views'),
     },
   },
 })

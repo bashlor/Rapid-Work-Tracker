@@ -1,8 +1,10 @@
 import { router } from '@inertiajs/react'
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
-import { useNotification } from './useNotification'
+
 import { tuyau } from '@/tuyau'
+
+import { useNotification } from './useNotification'
 
 // Utilisation des types générés par Tuyau
 type LoginCredentials = Parameters<typeof tuyau.auth.login.$post>[0]

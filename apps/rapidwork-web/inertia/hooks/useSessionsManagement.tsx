@@ -1,22 +1,25 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { format } from '@/utils/datetime'
-import { tuyau } from '../tuyau'
+
 import type { BackendWorkSession } from '@/types/backend'
 
+import { format } from '@/utils/datetime'
+
+import { tuyau } from '../tuyau'
+
 export interface SessionFormData {
-  taskId: string
   description: string
   duration: number // seconds
-  startTime: string // HH:MM format or ISO string
   endTime: string // HH:MM format or ISO string
+  startTime: string // HH:MM format or ISO string
+  taskId: string
 }
 
 // Query Keys
 export const sessionsKeys = {
   all: ['sessions'] as const,
-  lists: () => [...sessionsKeys.all, 'list'] as const,
   byDate: (date: string) => [...sessionsKeys.lists(), 'by_date', date] as const,
+  lists: () => [...sessionsKeys.all, 'list'] as const,
 }
 
 export const useSessionsManagement = (selectedDate: Date, initialSessions?: BackendWorkSession[]) => {
@@ -30,7 +33,8 @@ export const useSessionsManagement = (selectedDate: Date, initialSessions?: Back
     isLoading,
     refetch,
   } = useQuery<BackendWorkSession[]>({
-    queryKey: sessionsKeys.byDate(dateString),
+    enabled: true, // Toujours activer la query
+    initialData: initialSessions, // Utiliser les données préchargées si disponibles
     queryFn: async (): Promise<BackendWorkSession[]> => {
       try {
         // Utilisation de Tuyau avec typage sécurisé
@@ -51,13 +55,12 @@ export const useSessionsManagement = (selectedDate: Date, initialSessions?: Back
         throw error
       }
     },
-    initialData: initialSessions, // Utiliser les données préchargées si disponibles
-    staleTime: 0, // Considérer les données comme périmées immédiatement
-    retry: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
+    queryKey: sessionsKeys.byDate(dateString),
     refetchOnMount: true, // Permettre le refetch au montage
-    enabled: true, // Toujours activer la query
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
+    retry: false,
+    staleTime: 0, // Considérer les données comme périmées immédiatement
   })
 
   const createSessionMutation = useMutation<BackendWorkSession, Error, SessionFormData>({
@@ -66,10 +69,10 @@ export const useSessionsManagement = (selectedDate: Date, initialSessions?: Back
       try {
         const response = await tuyau.api.sessions.$post({
           description: sessionData.description,
-          taskId: sessionData.taskId,
-          startTime: sessionData.startTime,
-          endTime: sessionData.endTime,
           duration: sessionData.duration,
+          endTime: sessionData.endTime,
+          startTime: sessionData.startTime,
+          taskId: sessionData.taskId,
         })
         
         const responseData = response as any
@@ -85,26 +88,26 @@ export const useSessionsManagement = (selectedDate: Date, initialSessions?: Back
         throw error // Re-lancer l'erreur pour qu'elle soit gérée par React Query
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: sessionsKeys.byDate(dateString) })
-      toast.success('Session créée avec succès')
-    },
     onError: (error) => {
       console.error('Erreur lors de la création de la session:', error)
       toast.error('Erreur lors de la création de la session')
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: sessionsKeys.byDate(dateString) })
+      toast.success('Session créée avec succès')
+    },
   })
 
-  const updateSessionMutation = useMutation<BackendWorkSession, Error, { sessionId: string; sessionData: Partial<SessionFormData> }>({
-    mutationFn: async ({ sessionId, sessionData }): Promise<BackendWorkSession> => {
+  const updateSessionMutation = useMutation<BackendWorkSession, Error, { sessionData: Partial<SessionFormData>; sessionId: string; }>({
+    mutationFn: async ({ sessionData, sessionId }): Promise<BackendWorkSession> => {
       const response = await tuyau.api.sessions.$put({
         sessions: [
           {
-            id: sessionId,
-            taskId: sessionData.taskId!,
-            startTime: sessionData.startTime!,
-            endTime: sessionData.endTime!,
             description: sessionData.description,
+            endTime: sessionData.endTime!,
+            id: sessionId,
+            startTime: sessionData.startTime!,
+            taskId: sessionData.taskId!,
           },
         ],
       })
@@ -112,13 +115,13 @@ export const useSessionsManagement = (selectedDate: Date, initialSessions?: Back
       const updated = responseData?.data?.data?.[0] || responseData?.data
       return updated as BackendWorkSession
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: sessionsKeys.byDate(dateString) })
-      toast.success('Session mise à jour avec succès')
-    },
     onError: (error) => {
       console.error('Erreur lors de la mise à jour de la session:', error)
       toast.error('Erreur lors de la mise à jour de la session')
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: sessionsKeys.byDate(dateString) })
+      toast.success('Session mise à jour avec succès')
     },
   })
 
@@ -127,6 +130,11 @@ export const useSessionsManagement = (selectedDate: Date, initialSessions?: Back
       await tuyau.api.sessions({ id: sessionId }).$delete()
       return sessionId
     },
+    onError: (error) => {
+      console.error('Erreur lors de la suppression de la session:', error)
+      toast.error('Erreur lors de la suppression de la session')
+      queryClient.invalidateQueries({ queryKey: sessionsKeys.byDate(dateString) })
+    },
     onSuccess: (deletedId) => {
       // Optimistic update
       queryClient.setQueryData(sessionsKeys.byDate(dateString), (oldSessions: BackendWorkSession[] | undefined) => {
@@ -134,11 +142,6 @@ export const useSessionsManagement = (selectedDate: Date, initialSessions?: Back
         return oldSessions.filter((session) => session.id !== deletedId)
       })
       toast.success('Session supprimée avec succès')
-    },
-    onError: (error) => {
-      console.error('Erreur lors de la suppression de la session:', error)
-      toast.error('Erreur lors de la suppression de la session')
-      queryClient.invalidateQueries({ queryKey: sessionsKeys.byDate(dateString) })
     },
   })
 
@@ -150,7 +153,7 @@ export const useSessionsManagement = (selectedDate: Date, initialSessions?: Back
     sessionId: string,
     sessionData: Partial<SessionFormData>
   ): Promise<BackendWorkSession> => {
-    return await updateSessionMutation.mutateAsync({ sessionId, sessionData })
+    return await updateSessionMutation.mutateAsync({ sessionData, sessionId })
   }
 
   const deleteSession = async (sessionId: string): Promise<boolean> => {
@@ -163,16 +166,16 @@ export const useSessionsManagement = (selectedDate: Date, initialSessions?: Back
   }
 
   return {
-    sessions,
-    loading: isLoading,
-    isLoading: isLoading,
-    error,
-    refetch,
     createSession,
-    updateSession,
-    deleteSession,
     createSessionMutation,
-    updateSessionMutation,
+    deleteSession,
     deleteSessionMutation,
+    error,
+    isLoading: isLoading,
+    loading: isLoading,
+    refetch,
+    sessions,
+    updateSession,
+    updateSessionMutation,
   }
 }

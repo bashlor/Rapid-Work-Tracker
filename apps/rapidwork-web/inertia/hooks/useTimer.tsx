@@ -1,21 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-export type TimerStatus = 'idle' | 'running' | 'paused'
-
-export interface TimerState {
-  status: TimerStatus
-  startTime: Date | null
-  pausedTime: number // Temps total en pause (en millisecondes)
-  elapsed: number // Temps écoulé réel (en millisecondes)
-  currentTaskId: string | null
-  currentTaskName: string | null
-  currentDomain: string | null
-  currentSubdomain: string | null
-  currentDescription: string | null
-}
-
 export interface TimerHookReturn {
-  state: TimerState
+  formatElapsedTime: (elapsed: number) => string
+  pauseTimer: () => void
+  reset: () => void
+  resumeTimer: () => void
   startTimer: (
     taskId: string,
     taskName: string,
@@ -23,25 +12,36 @@ export interface TimerHookReturn {
     subdomain: string,
     description?: string
   ) => void
-  pauseTimer: () => void
-  resumeTimer: () => void
+  state: TimerState
   stopTimer: () => void
-  formatElapsedTime: (elapsed: number) => string
-  reset: () => void
 }
+
+export interface TimerState {
+  currentDescription: null | string
+  currentDomain: null | string
+  currentSubdomain: null | string
+  currentTaskId: null | string
+  currentTaskName: null | string
+  elapsed: number // Temps écoulé réel (en millisecondes)
+  pausedTime: number // Temps total en pause (en millisecondes)
+  startTime: Date | null
+  status: TimerStatus
+}
+
+export type TimerStatus = 'idle' | 'paused' | 'running'
 
 const STORAGE_KEY = 'timerState'
 
 const initialState: TimerState = {
-  status: 'idle',
-  startTime: null,
-  pausedTime: 0,
-  elapsed: 0,
-  currentTaskId: null,
-  currentTaskName: null,
+  currentDescription: null,
   currentDomain: null,
   currentSubdomain: null,
-  currentDescription: null,
+  currentTaskId: null,
+  currentTaskName: null,
+  elapsed: 0,
+  pausedTime: 0,
+  startTime: null,
+  status: 'idle',
 }
 
 export function useTimer(): TimerHookReturn {
@@ -85,7 +85,7 @@ export function useTimer(): TimerHookReturn {
   }, [])
 
   // Chargement depuis localStorage
-  const loadFromStorage = useCallback((): TimerState | null => {
+  const loadFromStorage = useCallback((): null | TimerState => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY)
       if (!saved) return null
@@ -148,15 +148,15 @@ export function useTimer(): TimerHookReturn {
     ) => {
       const now = new Date()
       const newState: TimerState = {
-        status: 'running',
-        startTime: now,
-        pausedTime: 0,
-        elapsed: 0,
-        currentTaskId: taskId,
-        currentTaskName: taskName,
+        currentDescription: description,
         currentDomain: domain,
         currentSubdomain: subdomain,
-        currentDescription: description,
+        currentTaskId: taskId,
+        currentTaskName: taskName,
+        elapsed: 0,
+        pausedTime: 0,
+        startTime: now,
+        status: 'running',
       }
       setState(newState)
       saveToStorage(newState)
@@ -181,8 +181,8 @@ export function useTimer(): TimerHookReturn {
       const pauseDuration = now.getTime() - pauseStartRef.current.getTime()
       const newState = {
         ...state,
-        status: 'running' as TimerStatus,
         pausedTime: state.pausedTime + pauseDuration,
+        status: 'running' as TimerStatus,
       }
       setState(newState)
       saveToStorage(newState)
@@ -229,12 +229,12 @@ export function useTimer(): TimerHookReturn {
   }, [saveToStorage])
 
   return {
-    state,
-    startTimer,
-    pauseTimer,
-    resumeTimer,
-    stopTimer,
     formatElapsedTime,
+    pauseTimer,
     reset,
+    resumeTimer,
+    startTimer,
+    state,
+    stopTimer,
   }
 }

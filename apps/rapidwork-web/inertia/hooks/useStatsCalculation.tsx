@@ -1,35 +1,36 @@
 import { useQuery } from '@tanstack/react-query'
-import { TimerEntry } from '@/lib/mock_data'
-import { useMemo } from 'react'
 import { DateTime } from 'luxon'
+import { useMemo } from 'react'
+
+import { TimerEntry } from '@/lib/mock_data'
 
 interface StatsResult {
-  topTasks: Array<{ name: string; duration: number; description: string }>
-  domainData: Array<{ name: string; duration: number }>
-  subdomainData: Array<{ name: string; duration: number }>
-  totalTime: number
-  totalTasks: number
+  domainData: Array<{ duration: number; name: string }>
+  longestTask: null | { description: string; duration: number; name: string }
   // Nouvelles propriétés pour les KPI
-  mostWorkedDomain: { name: string; duration: number } | null
-  longestTask: { name: string; duration: number; description: string } | null
-  // Données pour le graphique de tendance
-  trendData: Array<{ date: string; time: number; formattedTime: string }>
+  mostWorkedDomain: null | { duration: number; name: string }
+  subdomainData: Array<{ duration: number; name: string }>
   // Données détaillées des tâches
   taskDetails: Array<{
+    description?: string
+    domain: string
+    duration: number
     id: string
     name: string
-    domain: string
     subdomain: string
-    duration: number
-    description?: string
   }>
+  topTasks: Array<{ description: string; duration: number; name: string }>
+  totalTasks: number
+  totalTime: number
+  // Données pour le graphique de tendance
+  trendData: Array<{ date: string; formattedTime: string; time: number }>
 }
 
 // Query Keys pour les stats
 export const statsKeys = {
   all: ['stats'] as const,
-  calculations: () => [...statsKeys.all, 'calculations'] as const,
   calculation: (entriesHash: string) => [...statsKeys.calculations(), entriesHash] as const,
+  calculations: () => [...statsKeys.all, 'calculations'] as const,
 }
 
 // Fonction pour calculer les stats
@@ -85,19 +86,19 @@ const calculateStats = (entries: TimerEntry[]): StatsResult => {
     .sort(([, a], [, b]) => b - a)
     .slice(0, 10)
     .map(([name, duration]) => ({
-      name,
-      duration,
       description: taskDescriptions.get(name) || 'Aucune description',
+      duration,
+      name,
     }))
 
   const domainData = Array.from(domainStats.entries())
     .sort(([, a], [, b]) => b - a)
-    .map(([name, duration]) => ({ name, duration }))
+    .map(([name, duration]) => ({ duration, name }))
 
   const subdomainData = Array.from(subdomainStats.entries())
     .sort(([, a], [, b]) => b - a)
     .slice(0, 10)
-    .map(([name, duration]) => ({ name, duration }))
+    .map(([name, duration]) => ({ duration, name }))
 
   // KPI calculations
   const mostWorkedDomain = domainData.length > 0 ? domainData[0] : null
@@ -112,31 +113,31 @@ const calculateStats = (entries: TimerEntry[]): StatsResult => {
       const label = dt.isValid ? dt.toFormat('dd LLL') : date
       return {
         date: label,
-        time,
         formattedTime: formatTime(time),
+        time,
       }
     })
 
   // Task details
   const taskDetails = Array.from(taskStats.entries()).map(([taskId, duration]) => ({
+    description: taskDescriptions.get(taskId),
+    domain: taskDomains.get(taskId) || '',
+    duration,
     id: taskId,
     name: taskId, // En attendant d'avoir le nom réel
-    domain: taskDomains.get(taskId) || '',
     subdomain: taskSubdomains.get(taskId) || '',
-    duration,
-    description: taskDescriptions.get(taskId),
   }))
 
   return {
-    topTasks,
     domainData,
-    subdomainData,
-    totalTime,
-    totalTasks,
-    mostWorkedDomain,
     longestTask,
-    trendData,
+    mostWorkedDomain,
+    subdomainData,
     taskDetails,
+    topTasks,
+    totalTasks,
+    totalTime,
+    trendData,
   }
 }
 
@@ -169,31 +170,31 @@ export const useStatsCalculationWithQuery = (entries: TimerEntry[], initialData?
 
   const {
     data: stats,
-    isLoading: loading,
     error,
+    isLoading: loading,
     refetch,
   } = useQuery({
-    queryKey: statsKeys.calculation(entriesHash),
-    queryFn: () => calculateStats(entries),
-    initialData: initialData,
-    staleTime: 5 * 60 * 1000, // 5 minutes - les stats peuvent être cachées un peu
     enabled: entries.length > 0, // Ne calcule que si on a des entries
+    initialData: initialData,
+    queryFn: () => calculateStats(entries),
+    queryKey: [...statsKeys.calculation(entriesHash), entries],
+    staleTime: 5 * 60 * 1000, // 5 minutes - les stats peuvent être cachées un peu
   })
 
   return {
-    stats: stats || {
-      topTasks: [],
-      domainData: [],
-      subdomainData: [],
-      totalTime: 0,
-      totalTasks: 0,
-      mostWorkedDomain: null,
-      longestTask: null,
-      trendData: [],
-      taskDetails: [],
-    },
-    loading,
     error,
+    loading,
     refetch,
+    stats: stats || {
+      domainData: [],
+      longestTask: null,
+      mostWorkedDomain: null,
+      subdomainData: [],
+      taskDetails: [],
+      topTasks: [],
+      totalTasks: 0,
+      totalTime: 0,
+      trendData: [],
+    },
   }
 }

@@ -1,12 +1,15 @@
 {
   "extends": "@adonisjs/tsconfig/tsconfig.app.json",
   "compilerOptions": {
+    "jsx": "react",
     "rootDir": "./",
     "outDir": "./build",
     "paths": {
       "@/*": ["./inertia/*"],
-      "@components/*": ["./inertia/components/*"],
-      "@lib/*": ["./inertia/lib/*"]
+      "@/components/*": ["./inertia/components/*"],
+      "@/lib/*": ["./inertia/lib/*"],
+      "@/views/*": ["./inertia/views/*"],
+      "@/hooks/*": ["./inertia/hooks/*"]
     }
   },
   "exclude": ["./inertia/**/*", "node_modules", "build"]

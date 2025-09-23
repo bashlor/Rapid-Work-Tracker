@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react'
-import type { NotFoundPageProps } from '../../types/page_props'
+
+import type { NotFoundPageProps } from '@/types/page_props'
 
 export default function NotFound(props: NotFoundPageProps) {
   const { requestedPath } = props

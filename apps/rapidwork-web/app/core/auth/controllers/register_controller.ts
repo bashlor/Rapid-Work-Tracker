@@ -1,7 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 
 import { inject } from '@adonisjs/core'
-import logger from '@adonisjs/core/services/logger'
 
 import { validateAndStrip } from '../../main/validators/http_responses/common.js'
 import { LoginAction } from '../actions/login_action.js'

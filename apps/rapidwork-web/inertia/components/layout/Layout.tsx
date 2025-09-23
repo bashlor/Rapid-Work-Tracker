@@ -1,11 +1,12 @@
+import { usePage } from '@inertiajs/react'
 import React, { useState } from 'react'
-import AppHeader from '@components/time-tracking/AppHeader'
-import AppSidebar from '@components/time-tracking/AppSidebar'
+
+import ErrorBoundary from '@/components/ErrorBoundary'
+import AppHeader from '@/components/time-tracking/SharedComponents/AppHeader'
+import AppSidebar from '@/components/time-tracking/SharedComponents/AppSidebar'
 import { TimerProvider } from '@/contexts/TimerContext'
 import { WorkSessionProvider } from '@/contexts/WorkSessionContext'
 import { useNotification } from '@/hooks/useNotification'
-import { usePage } from '@inertiajs/react'
-import ErrorBoundary from '@/components/ErrorBoundary'
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -16,16 +17,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   useNotification()
 
   // Détection si on est sur la page add_work_session OU sessions OU home (pour le header qui utilise le contexte)
-  const isWorkSessionPage = currentPath.includes('/add_work_session') || 
-                           currentPath.includes('/sessions') || 
-                           currentPath.includes('/home')
+  const isWorkSessionPage =
+    currentPath.includes('/add_work_session') ||
+    currentPath.includes('/sessions') ||
+    currentPath.includes('/home')
 
   // Extraire les données préchargées pour les sessions si disponibles
   const pageProps = page.props as any
-  const initialData = (currentPath.includes('/add_work_session') || currentPath.includes('/sessions')) && pageProps.sessions ? {
-    sessions: pageProps.sessions || [],
-    selectedDate: pageProps.selectedDate
-  } : undefined
+  const initialData =
+    (currentPath.includes('/add_work_session') || currentPath.includes('/sessions')) &&
+    pageProps.sessions
+      ? {
+          selectedDate: pageProps.selectedDate,
+          sessions: pageProps.sessions || [],
+        }
+      : undefined
 
   const content = (
     <div className="flex h-screen w-full overflow-hidden bg-background">
@@ -57,10 +63,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <TimerProvider>
       {isWorkSessionPage ? (
-        <WorkSessionProvider initialData={initialData}>
-          {content}
-        </WorkSessionProvider>
-      ) : content}
+        <WorkSessionProvider initialData={initialData}>{content}</WorkSessionProvider>
+      ) : (
+        content
+      )}
     </TimerProvider>
   )
 }

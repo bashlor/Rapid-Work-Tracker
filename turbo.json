@@ -8,7 +8,16 @@
       "outputs": ["build/**", "dist/**"]
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": ["^lint"],
+      "inputs": ["**/*.{ts,tsx}", "eslint.config.*", ".eslintrc*"],
+      "outputs": [],
+      "cache": true
+    },
+    "lint:fix": {
+      "dependsOn": ["^lint:fix"],
+      "inputs": ["**/*.{ts,tsx}", "eslint.config.*", ".eslintrc*"],
+      "outputs": [],
+      "cache": false
     },
     "dev": {
       "cache": false,

@@ -1,77 +1,81 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react'
 import { DateTime } from 'luxon'
-
-type TimerStatus = 'idle' | 'running' | 'paused'
+import React, { createContext, useCallback, useContext, useEffect, useReducer, useRef } from 'react'
 
 // Interface locale pour les entrées de timer (indépendante des mocks)
 export interface TimerEntry {
-  id: string
-  userId: string
-  taskId: string
   date: string // Format: 'yyyy-MM-dd'
-  startTime: string // ISO string
-  endTime: string // ISO string
-  domain: string
-  subdomain: string
   description: string
-}
-
-interface TimerState {
-  status: TimerStatus
-  startTime: Date | null
-  pausedTime: number // Temps total en pause (en millisecondes)
-  elapsed: number
-  currentTaskId: string | null
-  currentTaskName: string | null
-  currentDomain: string | null
-  currentSubdomain: string | null
-  currentDescription: string | null
+  domain: string
+  endTime: string // ISO string
+  id: string
+  startTime: string // ISO string
+  subdomain: string
+  taskId: string
+  userId: string
 }
 
 type TimerAction =
+  | { payload: TimerState; type: 'LOAD_STATE'; }
   | {
-      type: 'START_TIMER'
       payload: {
-        taskId: string
-        taskName: string
+        description: string
         domain: string
         subdomain: string
-        description: string
+        taskId: string
+        taskName: string
       }
+      type: 'START_TIMER'
     }
-  | { type: 'PAUSE_TIMER'; payload: { pauseStartTime: Date } }
-  | { type: 'RESUME_TIMER'; payload: { pauseDuration: number } }
+  | { payload: { elapsed: number }; type: 'UPDATE_ELAPSED'; }
+  | { payload: { pauseDuration: number }; type: 'RESUME_TIMER'; }
+  | { payload: { pauseStartTime: Date }; type: 'PAUSE_TIMER'; }
   | { type: 'STOP_TIMER' }
-  | { type: 'UPDATE_ELAPSED'; payload: { elapsed: number } }
-  | { type: 'LOAD_STATE'; payload: TimerState }
+
+interface TimerState {
+  currentDescription: null | string
+  currentDomain: null | string
+  currentSubdomain: null | string
+  currentTaskId: null | string
+  currentTaskName: null | string
+  elapsed: number
+  pausedTime: number // Temps total en pause (en millisecondes)
+  startTime: Date | null
+  status: TimerStatus
+}
+
+type TimerStatus = 'idle' | 'paused' | 'running'
 
 const initialState: TimerState = {
-  status: 'idle',
-  startTime: null,
-  pausedTime: 0,
-  elapsed: 0,
-  currentTaskId: null,
-  currentTaskName: null,
+  currentDescription: null,
   currentDomain: null,
   currentSubdomain: null,
-  currentDescription: null,
+  currentTaskId: null,
+  currentTaskName: null,
+  elapsed: 0,
+  pausedTime: 0,
+  startTime: null,
+  status: 'idle',
+}
+
+interface TimerContextType {
+  formatElapsedTime: (elapsed: number) => string
+  pauseTimer: () => void
+  resumeTimer: () => void
+  startTimer: (
+    taskId: string,
+    taskName: string,
+    domain: string,
+    subdomain: string,
+    description: string
+  ) => void
+  state: TimerState
+  stopTimer: () => Promise<void>
 }
 
 function timerReducer(state: TimerState, action: TimerAction): TimerState {
   switch (action.type) {
-    case 'START_TIMER':
-      return {
-        ...state,
-        status: 'running',
-        startTime: new Date(),
-        pausedTime: 0,
-        elapsed: 0,
-        currentTaskId: action.payload.taskId,
-        currentTaskName: action.payload.taskName,
-        currentDomain: action.payload.domain,
-        currentSubdomain: action.payload.subdomain,
-        currentDescription: action.payload.description,
-      }
+    case 'LOAD_STATE':
+      return action.payload
     case 'PAUSE_TIMER':
       return {
         ...state,
@@ -80,8 +84,21 @@ function timerReducer(state: TimerState, action: TimerAction): TimerState {
     case 'RESUME_TIMER':
       return {
         ...state,
-        status: 'running',
         pausedTime: state.pausedTime + action.payload.pauseDuration,
+        status: 'running',
+      }
+    case 'START_TIMER':
+      return {
+        ...state,
+        currentDescription: action.payload.description,
+        currentDomain: action.payload.domain,
+        currentSubdomain: action.payload.subdomain,
+        currentTaskId: action.payload.taskId,
+        currentTaskName: action.payload.taskName,
+        elapsed: 0,
+        pausedTime: 0,
+        startTime: new Date(),
+        status: 'running',
       }
     case 'STOP_TIMER':
       return {
@@ -92,29 +109,12 @@ function timerReducer(state: TimerState, action: TimerAction): TimerState {
         ...state,
         elapsed: action.payload.elapsed,
       }
-    case 'LOAD_STATE':
-      return action.payload
     default:
       return state
   }
 }
 
-interface TimerContextType {
-  state: TimerState
-  startTimer: (
-    taskId: string,
-    taskName: string,
-    domain: string,
-    subdomain: string,
-    description: string
-  ) => void
-  pauseTimer: () => void
-  resumeTimer: () => void
-  stopTimer: () => Promise<void>
-  formatElapsedTime: (elapsed: number) => string
-}
-
-const TimerContext = createContext<TimerContextType | null>(null)
+const TimerContext = createContext<null | TimerContextType>(null)
 
 const STORAGE_KEY = 'timerState'
 const TIMER_ENTRIES_KEY = 'timerEntries'
@@ -165,7 +165,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
         if (parsedState.startTime) {
           parsedState.startTime = new Date(parsedState.startTime)
         }
-        dispatch({ type: 'LOAD_STATE', payload: parsedState })
+        dispatch({ payload: parsedState, type: 'LOAD_STATE' })
       } catch (error) {
         console.error('Failed to load timer state:', error)
       }
@@ -186,7 +186,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     if (state.status === 'running' && state.startTime) {
       intervalRef.current = setInterval(() => {
         const elapsed = calculateElapsed(state.startTime!, state.pausedTime)
-        dispatch({ type: 'UPDATE_ELAPSED', payload: { elapsed } })
+        dispatch({ payload: { elapsed }, type: 'UPDATE_ELAPSED' })
       }, 1000)
     } else {
       if (intervalRef.current) {
@@ -209,13 +209,13 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     subdomain: string,
     description: string
   ) => {
-    dispatch({ type: 'START_TIMER', payload: { taskId, taskName, domain, subdomain, description } })
+    dispatch({ payload: { description, domain, subdomain, taskId, taskName }, type: 'START_TIMER' })
   }
 
   const pauseTimer = () => {
     if (state.status === 'running') {
       pauseStartRef.current = new Date()
-      dispatch({ type: 'PAUSE_TIMER', payload: { pauseStartTime: new Date() } })
+      dispatch({ payload: { pauseStartTime: new Date() }, type: 'PAUSE_TIMER' })
     }
   }
 
@@ -223,7 +223,7 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     if (state.status === 'paused' && pauseStartRef.current) {
       const now = new Date()
       const pauseDuration = now.getTime() - pauseStartRef.current.getTime()
-      dispatch({ type: 'RESUME_TIMER', payload: { pauseDuration } })
+      dispatch({ payload: { pauseDuration }, type: 'RESUME_TIMER' })
       pauseStartRef.current = null
     }
   }
@@ -232,16 +232,16 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
     if (state.status !== 'idle' && state.startTime && state.currentTaskId) {
       // Save the timer entry
       const entry: TimerEntry = {
-        id: crypto.randomUUID(),
-        userId: 'current-user', // Replace with actual user ID when auth is integrated
-        taskId: state.currentTaskId,
         // Store a pure local date for the entry day
         date: DateTime.fromJSDate(state.startTime).toFormat('yyyy-LL-dd'),
-        startTime: state.startTime.toISOString(),
-        endTime: new Date().toISOString(),
-        domain: state.currentDomain || '',
-        subdomain: state.currentSubdomain || '',
         description: state.currentDescription || '',
+        domain: state.currentDomain || '',
+        endTime: new Date().toISOString(),
+        id: crypto.randomUUID(),
+        startTime: state.startTime.toISOString(),
+        subdomain: state.currentSubdomain || '',
+        taskId: state.currentTaskId,
+        userId: 'current-user', // Replace with actual user ID when auth is integrated
       }
 
       try {
@@ -265,12 +265,12 @@ export function TimerProvider({ children }: { children: React.ReactNode }) {
   return (
     <TimerContext.Provider
       value={{
-        state,
-        startTimer,
+        formatElapsedTime,
         pauseTimer,
         resumeTimer,
+        startTimer,
+        state,
         stopTimer,
-        formatElapsedTime,
       }}
     >
       {children}

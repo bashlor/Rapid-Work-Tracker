@@ -1,15 +1,18 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+
 import type { BackendDomainWithSubdomains, BackendSubdomain } from '@/types/backend'
+
 import { tuyau } from '@/tuyau'
+
 import { useNotification } from './useNotification'
 
 // Query Keys
 export const domainsKeys = {
   all: ['domains'] as const,
-  lists: () => [...domainsKeys.all, 'list'] as const,
-  list: (filters: Record<string, any>) => [...domainsKeys.lists(), { filters }] as const,
-  details: () => [...domainsKeys.all, 'detail'] as const,
   detail: (id: string) => [...domainsKeys.details(), id] as const,
+  details: () => [...domainsKeys.all, 'detail'] as const,
+  list: (filters: Record<string, any>) => [...domainsKeys.lists(), { filters }] as const,
+  lists: () => [...domainsKeys.all, 'list'] as const,
 }
 
 export const useDomainsManagement = (initialData?: BackendDomainWithSubdomains[]) => {
@@ -18,16 +21,16 @@ export const useDomainsManagement = (initialData?: BackendDomainWithSubdomains[]
 
   const {
     data: domains = [],
-    isLoading: loading,
     error,
+    isLoading: loading,
     refetch,
   } = useQuery<BackendDomainWithSubdomains[]>({
-    queryKey: domainsKeys.lists(),
+    initialData: initialData,
     queryFn: async (): Promise<BackendDomainWithSubdomains[]> => {
       const response = await tuyau.api.domains.$get()
       return response.data as BackendDomainWithSubdomains[]
     },
-    initialData: initialData,
+    queryKey: domainsKeys.lists(),
     staleTime: 15 * 60 * 1000,
   })
 
@@ -38,13 +41,13 @@ export const useDomainsManagement = (initialData?: BackendDomainWithSubdomains[]
       })
       return response.data as unknown as BackendDomainWithSubdomains
     },
-    onSuccess: () => {
-      // Refresh the data from server
-      queryClient.invalidateQueries({ queryKey: domainsKeys.lists() })
-    },
     onError: (error) => {
       console.error(error)
       errorNotification("Erreur lors de l'ajout du domaine")
+    },
+    onSuccess: () => {
+      // Refresh the data from server
+      queryClient.invalidateQueries({ queryKey: domainsKeys.lists() })
     },
   })
 
@@ -59,13 +62,13 @@ export const useDomainsManagement = (initialData?: BackendDomainWithSubdomains[]
         })
       return response.data as unknown as BackendDomainWithSubdomains
     },
-    onSuccess: () => {
-      // Refresh the data from server instead of optimistic update
-      queryClient.invalidateQueries({ queryKey: domainsKeys.lists() })
-    },
     onError: (error) => {
       console.error(error)
       errorNotification('Erreur lors de la mise à jour du domaine')
+    },
+    onSuccess: () => {
+      // Refresh the data from server instead of optimistic update
+      queryClient.invalidateQueries({ queryKey: domainsKeys.lists() })
     },
   })
 
@@ -78,17 +81,17 @@ export const useDomainsManagement = (initialData?: BackendDomainWithSubdomains[]
         .$delete()
       return domainId
     },
+    onError: (error) => {
+      console.error(error)
+      errorNotification('Erreur lors de la suppression du domaine')
+      queryClient.invalidateQueries({ queryKey: domainsKeys.lists() })
+    },
     onSuccess: (deletedId) => {
       // Optimistic update
       queryClient.setQueryData(domainsKeys.lists(), (oldDomains: BackendDomainWithSubdomains[] | undefined) => {
         if (!oldDomains) return []
         return oldDomains.filter((domain) => domain.id !== deletedId)
       })
-    },
-    onError: (error) => {
-      console.error(error)
-      errorNotification('Erreur lors de la suppression du domaine')
-      queryClient.invalidateQueries({ queryKey: domainsKeys.lists() })
     },
   }) 
 
@@ -100,13 +103,13 @@ export const useDomainsManagement = (initialData?: BackendDomainWithSubdomains[]
       })
       return response.data as unknown as BackendSubdomain
     },
-    onSuccess: () => {
-      // Refresh the domains list to get updated subdomains
-      queryClient.invalidateQueries({ queryKey: domainsKeys.lists() })
-    },
     onError: (error) => {
       console.error(error)
       errorNotification("Erreur lors de l'ajout du sous-domaine")
+    },
+    onSuccess: () => {
+      // Refresh the domains list to get updated subdomains
+      queryClient.invalidateQueries({ queryKey: domainsKeys.lists() })
     },
   })
 
@@ -116,6 +119,11 @@ export const useDomainsManagement = (initialData?: BackendDomainWithSubdomains[]
         subdomain_id: subdomainId,
       }).$delete()
       return subdomainId
+    },
+    onError: (error) => {
+      console.error(error)
+      errorNotification("Erreur lors de la suppression du sous-domaine")
+      queryClient.invalidateQueries({ queryKey: domainsKeys.lists() })
     },
     onSuccess: (deletedId) => {
       // Optimistic update
@@ -129,27 +137,22 @@ export const useDomainsManagement = (initialData?: BackendDomainWithSubdomains[]
         })
       })
     },
-    onError: (error) => {
-      console.error(error)
-      errorNotification("Erreur lors de la suppression du sous-domaine")
-      queryClient.invalidateQueries({ queryKey: domainsKeys.lists() })
-    },
   })
 
   const editSubdomainMutation = useMutation({
-    mutationFn: async ({ subdomainId, name }: { subdomainId: string; name: string }) => {
+    mutationFn: async ({ name, subdomainId }: { name: string; subdomainId: string; }) => {
       const response = await tuyau.api.subdomains({
         subdomain_id: subdomainId,
       }).$patch({ name })
       return response.data as unknown as BackendSubdomain
     },
-    onSuccess: () => {
-      // Refresh the domains list to get updated subdomains
-      queryClient.invalidateQueries({ queryKey: domainsKeys.lists() })
-    },
     onError: (error) => {
       console.error(error)
       errorNotification("Erreur lors de la mise à jour du sous-domaine")
+    },
+    onSuccess: () => {
+      // Refresh the domains list to get updated subdomains
+      queryClient.invalidateQueries({ queryKey: domainsKeys.lists() })
     },
   })
 
@@ -201,7 +204,7 @@ export const useDomainsManagement = (initialData?: BackendDomainWithSubdomains[]
 
   const editSubdomain = async (subdomainId: string, subdomainData: { name: string }): Promise<boolean> => {
     try {
-      await editSubdomainMutation.mutateAsync({ subdomainId, name: subdomainData.name })
+      await editSubdomainMutation.mutateAsync({ name: subdomainData.name, subdomainId })
       return true
     } catch {
       return false
@@ -209,15 +212,15 @@ export const useDomainsManagement = (initialData?: BackendDomainWithSubdomains[]
   }
 
   return {
-    domains,
-    loading,
-    error,
-    refetch,
     addDomain,
-    updateDomain,
-    deleteDomain,
     addSubdomain,
+    deleteDomain,
     deleteSubdomain,
+    domains,
     editSubdomain,
+    error,
+    loading,
+    refetch,
+    updateDomain,
   }
 }

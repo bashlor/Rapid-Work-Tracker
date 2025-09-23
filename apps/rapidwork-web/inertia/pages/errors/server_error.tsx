@@ -1,8 +1,9 @@
 import { Head } from '@inertiajs/react'
-import type { ServerErrorPageProps } from '../../types/page_props'
+
+import type { ServerErrorPageProps } from '@/types/page_props'
 
 export default function ServerError(props: ServerErrorPageProps) {
-  const { errorMessage, errorCode } = props
+  const { errorCode, errorMessage } = props
 
   return (
     <>

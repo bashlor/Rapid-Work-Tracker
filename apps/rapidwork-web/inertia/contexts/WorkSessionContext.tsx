@@ -1,47 +1,49 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react'
-import { format } from '@/utils/datetime'
-import { localInputToUtcIso, utcIsoToLocalInput } from '@/utils/datetime'
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { useSessionsManagement } from '@/hooks/useSessionsManagement'
-import { useBulkSessionsManagement } from '@/hooks/useBulkSessionsManagement'
+
 import type { BackendWorkSession } from '@/types/backend'
 
-// Type pour les données préchargées
-interface InitialData {
-  sessions?: BackendWorkSession[]
-  selectedDate?: string
-}
+import { useBulkSessionsManagement } from '@/hooks/useBulkSessionsManagement'
+import { useSessionsManagement } from '@/hooks/useSessionsManagement'
+import { format } from '@/utils/datetime'
+import { localInputToUtcIso, utcIsoToLocalInput } from '@/utils/datetime'
 
 export interface WorkSession {
-  id: string
+  description: string // Description de la session
   domainId: string
   domainName: string
+  endDateTime: string // Format ISO: "2025-01-24T11:00"
+  id: string
+  isNew: boolean
+  startDateTime: string // Format ISO: "2025-01-24T09:00"
   subdomainId?: string
   subdomainName?: string
   taskId: string
   taskName: string
-  startDateTime: string // Format ISO: "2025-01-24T09:00"
-  endDateTime: string // Format ISO: "2025-01-24T11:00"
-  description: string // Description de la session
   useSubdomain: boolean
-  isNew: boolean
 }
 
 export interface WorkSessionContextType {
-  selectedDate: Date
-  sessions: WorkSession[]
-  hasUnsavedChanges: boolean
-  isLoading: boolean
-  setSelectedDate: React.Dispatch<React.SetStateAction<Date>>
-  setSessions: React.Dispatch<React.SetStateAction<WorkSession[]>>
-  setHasUnsavedChanges: React.Dispatch<React.SetStateAction<boolean>>
+  createEmptySession: () => WorkSession
+  handleCancelAll: () => void
   handleDateChange: (date: Date) => void
   handleGlobalSave: () => Promise<void>
-  handleCancelAll: () => void
-  createEmptySession: () => WorkSession
+  hasUnsavedChanges: boolean
+  isLoading: boolean
+  selectedDate: Date
+  sessions: WorkSession[]
+  setHasUnsavedChanges: React.Dispatch<React.SetStateAction<boolean>>
+  setSelectedDate: React.Dispatch<React.SetStateAction<Date>>
+  setSessions: React.Dispatch<React.SetStateAction<WorkSession[]>>
 }
 
-const WorkSessionContext = createContext<WorkSessionContextType | null>(null)
+// Type pour les données préchargées
+interface InitialData {
+  selectedDate?: string
+  sessions?: BackendWorkSession[]
+}
+
+const WorkSessionContext = createContext<null | WorkSessionContextType>(null)
 
 export const useWorkSession = () => {
   const context = useContext(WorkSessionContext)
@@ -121,17 +123,17 @@ export const WorkSessionProvider: React.FC<WorkSessionProviderProps> = ({
   // Utiliser le hook de gestion des sessions pour l'API avec données préchargées
   // Seulement pour la date initiale
   const { 
-    sessions: apiSessions, 
+    deleteSession, 
     loading: isLoading,
     refetch,
-    deleteSession
+    sessions: apiSessions
   } = useSessionsManagement(selectedDate, shouldUseInitialData ? initialData?.sessions : undefined)
 
   // Hook pour la sauvegarde en bulk
   const { bulkUpdateSessions } = useBulkSessionsManagement()
 
   // Synchroniser les sessions API avec l'état local (avec garde pour éviter les boucles)
-  const lastSyncRef = React.useRef<string | null>(null)
+  const lastSyncRef = React.useRef<null | string>(null)
 
   useEffect(() => {
     // Construire une signature stable des sessions API
@@ -150,19 +152,19 @@ export const WorkSessionProvider: React.FC<WorkSessionProviderProps> = ({
 
     if (apiSessions && apiSessions.length > 0) {
       const workSessions: WorkSession[] = apiSessions.map((session) => ({
-        id: session.id,
+        description: session.description || '', // Utiliser la description de l'API ou une chaîne vide
         domainId: '',
         domainName: '',
+        endDateTime: utcIsoToLocalInput(session.endTime || ''),
+        id: session.id,
+        isNew: false,
+        // Convert UTC ISO from API to local input format for datetime-local fields
+        startDateTime: utcIsoToLocalInput(session.startTime || ''),
         subdomainId: '',
         subdomainName: '',
         taskId: session.taskId,
         taskName: '',
-        // Convert UTC ISO from API to local input format for datetime-local fields
-        startDateTime: utcIsoToLocalInput(session.startTime || ''),
-        endDateTime: utcIsoToLocalInput(session.endTime || ''),
-        description: session.description || '', // Utiliser la description de l'API ou une chaîne vide
         useSubdomain: false,
-        isNew: false,
       }))
 
       setSessions((current) => {
@@ -192,18 +194,18 @@ export const WorkSessionProvider: React.FC<WorkSessionProviderProps> = ({
     const endDateTime = format(currentDate, 'yyyy-MM-dd') + 'T10:00'
 
     return {
-      id: crypto.randomUUID(),
+      description: '', // Description vide pour une nouvelle session
       domainId: '',
       domainName: '',
+      endDateTime,
+      id: crypto.randomUUID(),
+      isNew: true,
+      startDateTime,
       subdomainId: '',
       subdomainName: '',
       taskId: '',
       taskName: '',
-      startDateTime,
-      endDateTime,
-      description: '', // Description vide pour une nouvelle session
       useSubdomain: false,
-      isNew: true,
     }
   }, [])
 
@@ -280,13 +282,13 @@ export const WorkSessionProvider: React.FC<WorkSessionProviderProps> = ({
           const duration = Math.max(0, Math.floor((endTime.getTime() - startTime.getTime()) / 60000))
 
           return {
-            id: session.isNew ? undefined : session.id, // Pas d'ID pour les nouvelles sessions
-            taskId: session.taskId,
-            // Send UTC ISO to API
-            startTime: localInputToUtcIso(session.startDateTime),
-            endTime: localInputToUtcIso(session.endDateTime),
             description: session.description || `Session: ${session.taskName}`, // Utiliser la description saisie ou celle par défaut
             duration,
+            endTime: localInputToUtcIso(session.endDateTime),
+            id: session.isNew ? undefined : session.id, // Pas d'ID pour les nouvelles sessions
+            // Send UTC ISO to API
+            startTime: localInputToUtcIso(session.startDateTime),
+            taskId: session.taskId,
           }
         })
         
@@ -340,17 +342,17 @@ export const WorkSessionProvider: React.FC<WorkSessionProviderProps> = ({
   }, [initialSessionsSnapshot])
 
   const value: WorkSessionContextType = {
-    selectedDate,
-    sessions,
-    hasUnsavedChanges,
-    isLoading,
-    setSelectedDate,
-    setSessions,
-    setHasUnsavedChanges,
+    createEmptySession,
+    handleCancelAll,
     handleDateChange,
     handleGlobalSave,
-    handleCancelAll,
-    createEmptySession,
+    hasUnsavedChanges,
+    isLoading,
+    selectedDate,
+    sessions,
+    setHasUnsavedChanges,
+    setSelectedDate,
+    setSessions,
   }
 
   return <WorkSessionContext.Provider value={value}>{children}</WorkSessionContext.Provider>

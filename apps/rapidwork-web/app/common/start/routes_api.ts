@@ -69,3 +69,17 @@ router
   })
   .prefix('/api')
   .middleware([middleware.forceJson(), middleware.auth()])
+
+// ---------------------------------------------------------------------------
+// ROUTE CATCH-ALL POUR LES ROUTES API NON TROUVÉES (doit être en dernier)
+// ---------------------------------------------------------------------------
+router
+  .any('/api/*', ({ response }) => {
+    return response.status(404).json({
+      code: 'ROUTE_NOT_FOUND',
+      error: 'API endpoint not found',
+      message: 'The requested API endpoint does not exist',
+      success: false,
+    })
+  })
+  .middleware([middleware.forceJson()])

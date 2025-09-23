@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
-import { TaskWithSessions, BackendTaskWithRelations, BackendWorkSession } from '@/types/backend'
+
 import { tuyau } from '@/tuyau'
+import { BackendTaskWithRelations, BackendWorkSession, TaskWithSessions } from '@/types/backend'
 
 // Query keys spécifiques
 export const tasksWithSessionsKeys = {
   all: ['tasksWithSessions'] as const,
-  lists: () => [...tasksWithSessionsKeys.all, 'list'] as const,
   list: (filters: Record<string, any>) => [...tasksWithSessionsKeys.lists(), { filters }] as const,
+  lists: () => [...tasksWithSessionsKeys.all, 'list'] as const,
 }
 
 // Fonction pour combiner les données
@@ -52,21 +53,21 @@ const combineTasksAndSessions = (tasks: BackendTaskWithRelations[], sessions: Ba
 export const useTasksWithSessions = (initialData?: TaskWithSessions[]) => {
   const {
     data: tasksWithSessions = [],
-    isLoading: loading,
     error,
+    isLoading: loading,
     refetch,
   } = useQuery({
-    queryKey: tasksWithSessionsKeys.lists(),
-    queryFn: fetchTasksWithSessions,
     initialData: initialData,
+    queryFn: fetchTasksWithSessions,
+    queryKey: tasksWithSessionsKeys.lists(),
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 
   return {
-    tasksWithSessions,
-    loading,
     error,
+    loading,
     refetch,
+    tasksWithSessions,
   }
 }
 
@@ -75,24 +76,24 @@ export const useTasksWithSessionsOptimized = (initialData?: TaskWithSessions[]) 
 
   const {
     data: tasksWithSessions = [],
-    isLoading: loading,
     error,
+    isLoading: loading,
     refetch,
   } = useQuery({
-    queryKey: tasksWithSessionsKeys.lists(),
+    initialData: initialData,
     queryFn: async () => {
       // For now, just use the regular fetch function
       // TODO: Implement cache optimization when needed
       return fetchTasksWithSessions()
     },
-    initialData: initialData,
+    queryKey: tasksWithSessionsKeys.lists(),
     staleTime: 5 * 60 * 1000,
   })
 
   return {
-    tasksWithSessions,
-    loading,
     error,
+    loading,
     refetch,
+    tasksWithSessions,
   }
 }

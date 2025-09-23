@@ -1,17 +1,18 @@
-import { useState, useEffect } from 'react'
-import { BackendDomainWithSubdomains, BackendTaskWithRelations } from '@/types/backend'
-import { format } from '@/utils/datetime'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
+import { BackendDomainWithSubdomains, BackendTaskWithRelations } from '@/types/backend'
+import { format } from '@/utils/datetime'
+
 interface TaskEntry {
+  date: string
+  description: string
+  domain: string
+  endTime: string
   id: string
   name: string
   startTime: string
-  endTime: string
-  domain: string
   subdomain: string
-  description: string
-  date: string
 }
 
 export const useDetailedEntry = (date: Date, domains: BackendDomainWithSubdomains[], tasks: BackendTaskWithRelations[], user: any) => {
@@ -25,13 +26,13 @@ export const useDetailedEntry = (date: Date, domains: BackendDomainWithSubdomain
   // const { addEntry, removeEntry, entries } = useEntries()
 
   const [formData, setFormData] = useState({
+    description: '',
+    domain: '',
+    endTime: '',
+    startTime: '',
+    subdomain: '',
     taskId: '',
     taskName: '',
-    startTime: '',
-    endTime: '',
-    domain: '',
-    subdomain: '',
-    description: '',
   })
 
   // Load timer entries for the selected date
@@ -84,11 +85,11 @@ export const useDetailedEntry = (date: Date, domains: BackendDomainWithSubdomain
 
         setFormData((prevData) => ({
           ...prevData,
-          taskId: task.id,
-          taskName: task.title,
+          description: task.description || '',
           domain: domainObj?.id || '',
           subdomain: domainObj?.subdomains.find((s) => s.name === task.subdomain?.name)?.id || '',
-          description: task.description || '',
+          taskId: task.id,
+          taskName: task.title,
         }))
 
         // Mettre à jour les sélections de domaine et sous-domaine
@@ -155,15 +156,15 @@ export const useDetailedEntry = (date: Date, domains: BackendDomainWithSubdomain
 
     // Create timer entry
     const timerEntry = {
-      id: isNewTask ? crypto.randomUUID() : formData.taskId,
-      taskName: formData.taskName,
-      domain: domainObj.name,
-      subdomain: subdomainObj.name,
-      startTime: formData.startTime,
-      endTime: formData.endTime,
-      duration: durationSeconds,
-      description: formData.description,
       date: formattedDate,
+      description: formData.description,
+      domain: domainObj.name,
+      duration: durationSeconds,
+      endTime: formData.endTime,
+      id: isNewTask ? crypto.randomUUID() : formData.taskId,
+      startTime: formData.startTime,
+      subdomain: subdomainObj.name,
+      taskName: formData.taskName,
     }
 
     // TODO: Add entry to storage when entries context is implemented
@@ -171,14 +172,14 @@ export const useDetailedEntry = (date: Date, domains: BackendDomainWithSubdomain
 
     // Update local state
     const newTask = {
+      date: timerEntry.date,
+      description: timerEntry.description,
+      domain: timerEntry.domain,
+      endTime: timerEntry.endTime,
       id: timerEntry.id,
       name: timerEntry.taskName,
       startTime: timerEntry.startTime,
-      endTime: timerEntry.endTime,
-      domain: timerEntry.domain,
       subdomain: timerEntry.subdomain,
-      description: timerEntry.description,
-      date: timerEntry.date,
     }
 
     setCurrentTasks((prevTasks) => [...prevTasks, newTask])
@@ -189,13 +190,13 @@ export const useDetailedEntry = (date: Date, domains: BackendDomainWithSubdomain
 
   const resetForm = () => {
     setFormData({
+      description: '',
+      domain: '',
+      endTime: '',
+      startTime: '',
+      subdomain: '',
       taskId: '',
       taskName: '',
-      startTime: '',
-      endTime: '',
-      domain: '',
-      subdomain: '',
-      description: '',
     })
     setSelectedDomain('')
     setSelectedSubdomain('')
@@ -213,16 +214,16 @@ export const useDetailedEntry = (date: Date, domains: BackendDomainWithSubdomain
 
   return {
     currentTasks,
-    isModalOpen,
-    setIsModalOpen,
     formData,
-    selectedDomain,
     handleInputChange,
     handleSubmit,
-    removeTask: handleRemoveEntry,
-    taskIdInputOpen,
-    setTaskIdInputOpen,
+    isModalOpen,
     matchingTask,
+    removeTask: handleRemoveEntry,
     resetForm,
+    selectedDomain,
+    setIsModalOpen,
+    setTaskIdInputOpen,
+    taskIdInputOpen,
   }
 }
